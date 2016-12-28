@@ -40,7 +40,7 @@
     "mocha": "^2.5.3",
     "npm-run-all": "^2.1.2",
     "power-assert": "^1.4.1",
-    "textlint": "^7.0.1",
+    "textlint": "^7.2.1",
     "textlint-tester": "^2.0.0"
   }
 }
