@@ -24,7 +24,7 @@ function isRelative(uri) {
 /**
  * Checks if a given URI is alive or not.
  * @param {string} uri
- * @return {{ ok: boolean, redirect: string, message: string }}
+ * @return {{ ok: boolean, redirect?: string, message: string }}
  */
 async function isAlive(uri) {
   try {
