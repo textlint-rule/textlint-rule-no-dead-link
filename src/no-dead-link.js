@@ -24,7 +24,7 @@ function isRelative(uri) {
 /**
  * Checks if a given URI is alive or not.
  * @param {string} uri
- * @return {{ ok: bool, message: string }}
+ * @return {{ ok: boolean, redirect: string, message: string }}
  */
 async function isAlive(uri) {
   try {
@@ -34,9 +34,22 @@ async function isAlive(uri) {
       // to avoid the zlib's "unexpected end of file" error
       // https://github.com/request/request/issues/2045
       compress: false,
+      // manual redirect
+      redirect: 'manual'
     };
     const res = await fetch(uri, opts);
 
+    if (res.status === 301) {
+      const finalRes = await fetch(uri, {
+        method: 'HEAD',
+        compress: false
+      });
+      return {
+        ok: finalRes.ok,
+        redirect: finalRes.url,
+        message: `${res.status} ${res.statusText}`,
+      };
+    }
     return {
       ok: res.ok,
       message: `${res.status} ${res.statusText}`,
@@ -55,6 +68,7 @@ function reporter(context, options = {}) {
     getSource,
     report,
     RuleError,
+    fixer
   } = context;
   const helper = new RuleHelper(context);
   const opts = Object.assign({}, DEFAULT_OPTIONS, options);
@@ -85,11 +99,18 @@ function reporter(context, options = {}) {
       uri = URL.resolve(opts.baseURI, uri);
     }
 
-    const { ok, message: msg } = await isAlive(uri);
+    const { ok, redirect, message: msg } = await isAlive(uri);
 
     if (!ok) {
       const message = `${uri} is dead. (${msg})`;
-      report(node, new RuleError(message, { index }));
+      report(node, new RuleError(message, {index}));
+    } else if (redirect) {
+      const message = `${uri} is redirected. (${msg})`;
+      const fix = fixer.replaceTextRange([index, index + uri.length], redirect);
+      report(node, new RuleError(message, {
+        fix,
+        index
+      }));
     }
   };
 
@@ -125,11 +146,13 @@ function reporter(context, options = {}) {
       if (helper.isChildNode(node, [Syntax.BlockQuote])) {
         return;
       }
-
+      // [text](http://example.com)
+      //       ^
+      const index = node.raw.indexOf(node.url) || 0;
       URIs.push({
         node,
         uri: node.url,
-        index: 0,
+        index,
       });
     },
 
