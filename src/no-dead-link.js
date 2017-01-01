@@ -10,7 +10,7 @@ const DEFAULT_OPTIONS = {
 
 // http://stackoverflow.com/a/3809435/951517
 // eslint-disable-next-line max-len
-const URI_REGEXP = /(https?:)?\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g;
+const URI_REGEXP = /(https?:)?\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)/g;
 
 /**
  * Returns `true` if a given URI is relative.
@@ -35,14 +35,14 @@ async function isAlive(uri) {
       // https://github.com/request/request/issues/2045
       compress: false,
       // manual redirect
-      redirect: 'manual'
+      redirect: 'manual',
     };
     const res = await fetch(uri, opts);
 
     if (res.status === 301) {
       const finalRes = await fetch(uri, {
         method: 'HEAD',
-        compress: false
+        compress: false,
       });
       return {
         ok: finalRes.ok,
@@ -68,7 +68,7 @@ function reporter(context, options = {}) {
     getSource,
     report,
     RuleError,
-    fixer
+    fixer,
   } = context;
   const helper = new RuleHelper(context);
   const opts = Object.assign({}, DEFAULT_OPTIONS, options);
@@ -103,13 +103,13 @@ function reporter(context, options = {}) {
 
     if (!ok) {
       const message = `${uri} is dead. (${msg})`;
-      report(node, new RuleError(message, {index}));
+      report(node, new RuleError(message, { index }));
     } else if (redirect) {
       const message = `${uri} is redirected. (${msg})`;
       const fix = fixer.replaceTextRange([index, index + uri.length], redirect);
       report(node, new RuleError(message, {
         fix,
-        index
+        index,
       }));
     }
   };

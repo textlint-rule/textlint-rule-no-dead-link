@@ -40,8 +40,8 @@ tester.run('no-dead-link', rule, {
           message: 'http://httpstat.us/301 is redirected. (301 Moved Permanently)',
           line: 1,
           column: 18,
-        }
-      ]
+        },
+      ],
     },
     {
       text: 'should treat 301 [link](http://httpstat.us/301)',
@@ -51,8 +51,8 @@ tester.run('no-dead-link', rule, {
           message: 'http://httpstat.us/301 is redirected. (301 Moved Permanently)',
           line: 1,
           column: 25,
-        }
-      ]
+        },
+      ],
     },
     {
       text: 'should treat 404 Not Found as dead: http://httpstat.us/404',
