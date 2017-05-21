@@ -40,6 +40,6 @@
     "mocha": "^3.2.0",
     "npm-run-all": "^4.0.1",
     "textlint": "^8.0.0",
-    "textlint-tester": "^2.1.0"
+    "textlint-tester": "^2.2.3"
   }
 }
