@@ -22,6 +22,16 @@ function isRelative(uri) {
 }
 
 /**
+ * Return `true` if the `code` is redirect status code.
+ * @see https://fetch.spec.whatwg.org/#redirect-status
+ * @param {number} code
+ * @returns {boolean}
+ */
+function isRedirect(code) {
+  return code === 301 || code === 302 || code === 303 || code === 307 || code === 308;
+}
+
+/**
  * Checks if a given URI is alive or not.
  * @param {string} uri
  * @return {{ ok: boolean, redirect?: string, message: string }}
@@ -39,10 +49,13 @@ async function isAlive(uri) {
     };
     const res = await fetch(uri, opts);
 
-    if (res.status === 301) {
+    if (isRedirect(res.status)) {
+      // https://github.com/bitinn/node-fetch not support `Response.redirect`.
+      // Instead of it, use fetch with follow option.
       const finalRes = await fetch(uri, {
         method: 'HEAD',
         compress: false,
+        redirect: 'follow',
       });
       return {
         ok: finalRes.ok,

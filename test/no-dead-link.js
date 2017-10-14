@@ -33,53 +33,64 @@ tester.run('no-dead-link', rule, {
   ],
   invalid: [
     {
-      text: 'should treat 301 http://httpstat.us/301',
-      output: 'should treat 301 http://httpstat.us/',
+      text: 'should treat 301 https://httpstat.us/301',
+      output: 'should treat 301 https://httpstat.us/',
       errors: [
         {
-          message: 'http://httpstat.us/301 is redirected. (301 Moved Permanently)',
+          message: 'https://httpstat.us/301 is redirected. (301 Moved Permanently)',
           line: 1,
           column: 18,
         },
       ],
     },
     {
-      text: 'should treat 301 [link](http://httpstat.us/301)',
-      output: 'should treat 301 [link](http://httpstat.us/)',
+      text: 'should treat 301 [link](https://httpstat.us/301)',
+      output: 'should treat 301 [link](https://httpstat.us/)',
       errors: [
         {
-          message: 'http://httpstat.us/301 is redirected. (301 Moved Permanently)',
+          message: 'https://httpstat.us/301 is redirected. (301 Moved Permanently)',
           line: 1,
           column: 25,
         },
       ],
     },
     {
-      text: 'should treat 404 Not Found as dead: http://httpstat.us/404',
+      text: 'should treat 302 [link](https://httpstat.us/302)',
+      output: 'should treat 302 [link](https://httpstat.us/)',
       errors: [
         {
-          message: 'http://httpstat.us/404 is dead. (404 Not Found)',
+          message: 'https://httpstat.us/302 is redirected. (302 Found)',
+          line: 1,
+          column: 25,
+        },
+      ],
+    },
+    {
+      text: 'should treat 404 Not Found as dead: https://httpstat.us/404',
+      errors: [
+        {
+          message: 'https://httpstat.us/404 is dead. (404 Not Found)',
           line: 1,
           column: 37,
         },
       ],
     },
     {
-      text: 'should treat 500 Internal Server Error as dead: http://httpstat.us/500',
+      text: 'should treat 500 Internal Server Error as dead: https://httpstat.us/500',
       errors: [
         {
-          message: 'http://httpstat.us/500 is dead. (500 Internal Server Error)',
+          message: 'https://httpstat.us/500 is dead. (500 Internal Server Error)',
           line: 1,
           column: 49,
         },
       ],
     },
     {
-      text: 'should locate the exact index of a URL in a plain text: http://httpstat.us/404',
+      text: 'should locate the exact index of a URL in a plain text: https://httpstat.us/404',
       ext: '.txt',
       errors: [
         {
-          message: 'http://httpstat.us/404 is dead. (404 Not Found)',
+          message: 'https://httpstat.us/404 is dead. (404 Not Found)',
           line: 1,
           column: 57,
         },
