@@ -31,15 +31,15 @@
     "textlint-rule-helper": "^2.0.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.10.1",
-    "babel-core": "^6.9.1",
-    "babel-preset-env": "^1.1.8",
-    "eslint": "^3.14.1",
-    "eslint-config-airbnb-base": "^11.0.1",
-    "eslint-plugin-import": "^2.2.0",
-    "mocha": "^3.2.0",
-    "npm-run-all": "^4.0.1",
-    "textlint": "^7.2.1",
-    "textlint-tester": "^2.1.0"
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "eslint": "^4.13.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0",
+    "mocha": "^4.0.1",
+    "npm-run-all": "^4.1.2",
+    "textlint": "^9.1.1",
+    "textlint-tester": "^3.0.3"
   }
 }
