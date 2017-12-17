@@ -10,7 +10,7 @@
     "build": "babel src -d lib --source-maps",
     "prepublish": "npm run --if-present build",
     "test": "npm-run-all lint mocha",
-    "lint": "eslint src test",
+    "lint": "eslint --fix src test",
     "mocha": "mocha",
     "precommit": "lint-staged",
     "prettier": "prettier --write \"**/*.{js,json,md}\""
