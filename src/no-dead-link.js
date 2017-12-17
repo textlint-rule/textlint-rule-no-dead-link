@@ -3,9 +3,9 @@ import fetch from 'isomorphic-fetch';
 import URL from 'url';
 
 const DEFAULT_OPTIONS = {
-  checkRelative: false,  // should check relative URLs.
-  baseURI: null,  // a base URI to resolve a relative URL.
-  ignore: [],  // URIs to be skipped from availability checks.
+  checkRelative: false, // should check relative URLs.
+  baseURI: null, // a base URI to resolve a relative URL.
+  ignore: [], // URIs to be skipped from availability checks.
 };
 
 // http://stackoverflow.com/a/3809435/951517
@@ -64,11 +64,7 @@ async function isAlive(uri) {
 
 function reporter(context, options = {}) {
   const {
-    Syntax,
-    getSource,
-    report,
-    RuleError,
-    fixer,
+    Syntax, getSource, report, RuleError, fixer,
   } = context;
   const helper = new RuleHelper(context);
   const opts = Object.assign({}, DEFAULT_OPTIONS, options);
@@ -107,10 +103,13 @@ function reporter(context, options = {}) {
     } else if (redirect) {
       const message = `${uri} is redirected. (${msg})`;
       const fix = fixer.replaceTextRange([index, index + uri.length], redirect);
-      report(node, new RuleError(message, {
-        fix,
-        index,
-      }));
+      report(
+        node,
+        new RuleError(message, {
+          fix,
+          index,
+        }),
+      );
     }
   };
 
@@ -137,7 +136,7 @@ function reporter(context, options = {}) {
       // eslint-disable-next-line no-cond-assign
       while ((matched = URI_REGEXP.exec(text))) {
         const uri = matched[0];
-        const index = matched.index;
+        const { index } = matched;
         URIs.push({ node, uri, index });
       }
     },
@@ -157,9 +156,7 @@ function reporter(context, options = {}) {
     },
 
     [`${context.Syntax.Document}:exit`]() {
-      return Promise.all(
-        URIs.map((item) => lint(item)),
-      );
+      return Promise.all(URIs.map((item) => lint(item)));
     },
   };
 }
