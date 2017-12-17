@@ -34,12 +34,13 @@ function isRedirect(code) {
 /**
  * Checks if a given URI is alive or not.
  * @param {string} uri
+ * @param {string} method
  * @return {{ ok: boolean, redirect?: string, message: string }}
  */
-async function isAlive(uri) {
+async function isAlive(uri, method = 'HEAD') {
   try {
     const opts = {
-      method: 'HEAD',
+      method,
       // Disable gzip compression in Node.js
       // to avoid the zlib's "unexpected end of file" error
       // https://github.com/request/request/issues/2045
@@ -112,7 +113,8 @@ function reporter(context, options = {}) {
       uri = URL.resolve(opts.baseURI, uri);
     }
 
-    const { ok, redirect, message: msg } = await isAlive(uri);
+    const result = await isAlive(uri);
+    const { ok, redirect, message: msg } = result.ok ? result : await isAlive(uri, 'GET');
 
     if (!ok) {
       const message = `${uri} is dead. (${msg})`;
