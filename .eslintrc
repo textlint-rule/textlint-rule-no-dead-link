@@ -1,7 +1,7 @@
 {
   "root": true,
-  "extends": "eslint-config-airbnb-base",
-  "rules": {
-    "arrow-parens": ["error", "always"]
-  }
+  "extends": [
+    "eslint-config-airbnb-base",
+    "prettier"
+  ]
 }
