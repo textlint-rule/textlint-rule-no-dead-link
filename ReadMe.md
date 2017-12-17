@@ -11,20 +11,24 @@ to make sure every link in a document is available.
 The primary target of this rule is Markdown documents, while it may also work for plain text documents (See tests).
 
 ## Installation
+
 ```
 $ npm install textlint-rule-no-dead-link
 ```
 
 ## Usage
+
 ```
 $ npm install textlint textlint-rule-no-dead-link
 $ textlint --rule textlint-rule-no-dead-link text-to-check.txt
 ```
 
 ## Options
+
 Please write your configurations in `.textlintrc`.
 
 The default options are:
+
 ```
 {
   "rules": {
@@ -38,13 +42,16 @@ The default options are:
 ```
 
 ### checkRelative
+
 Enable the dead link checks against relative URIs.
 Note that you also have to specify the `baseURI` to make this option work.
 
 ### baseURI
+
 The base URI to be used for resolving relative URIs.
 
 Example:
+
 ```
 {
   "rules": {
@@ -57,9 +64,11 @@ Example:
 ```
 
 ### ignore
+
 An array of URIs to be ignored, i.e. skipped from availability checks.
 
 Example:
+
 ```
 {
   "rules": {
@@ -73,6 +82,7 @@ Example:
 ```
 
 ## Tests
+
 ```
 npm test
 ```

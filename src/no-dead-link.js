@@ -63,9 +63,7 @@ async function isAlive(uri) {
 }
 
 function reporter(context, options = {}) {
-  const {
-    Syntax, getSource, report, RuleError, fixer,
-  } = context;
+  const { Syntax, getSource, report, RuleError, fixer } = context;
   const helper = new RuleHelper(context);
   const opts = Object.assign({}, DEFAULT_OPTIONS, options);
 

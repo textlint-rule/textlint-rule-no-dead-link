@@ -10,22 +10,26 @@ tester.run('no-dead-link', rule, {
     'should be able to check a URL in Markdown: https://example.com/',
     'should treat 200 OK as alive: https://httpstat.us/200',
     {
-      text: 'should be able to check a URL in a plain text: https://example.com/',
+      text:
+        'should be able to check a URL in a plain text: https://example.com/',
       ext: '.txt',
     },
     {
-      text: 'should be able to check multiple URLs in a plain text: https://example.com/, https://httpstat.us/200',
+      text:
+        'should be able to check multiple URLs in a plain text: https://example.com/, https://httpstat.us/200',
       ext: '.txt',
     },
     {
-      text: 'should be able to check relative pathes when checkRelative is true: ![robot](index.html)',
+      text:
+        'should be able to check relative pathes when checkRelative is true: ![robot](index.html)',
       options: {
         checkRelative: true,
         baseURI: 'https://example.com/',
       },
     },
     {
-      text: 'should ignore URLs in the "ignore" option: https://example.com/404.html shouldn\'t be checked.',
+      text:
+        'should ignore URLs in the "ignore" option: https://example.com/404.html shouldn\'t be checked.',
       options: {
         ignore: ['https://example.com/404.html'],
       },
@@ -37,7 +41,8 @@ tester.run('no-dead-link', rule, {
       output: 'should treat 301 https://httpstat.us/',
       errors: [
         {
-          message: 'https://httpstat.us/301 is redirected. (301 Moved Permanently)',
+          message:
+            'https://httpstat.us/301 is redirected. (301 Moved Permanently)',
           line: 1,
           column: 18,
         },
@@ -48,7 +53,8 @@ tester.run('no-dead-link', rule, {
       output: 'should treat 301 [link](https://httpstat.us/)',
       errors: [
         {
-          message: 'https://httpstat.us/301 is redirected. (301 Moved Permanently)',
+          message:
+            'https://httpstat.us/301 is redirected. (301 Moved Permanently)',
           line: 1,
           column: 25,
         },
@@ -65,17 +71,20 @@ tester.run('no-dead-link', rule, {
       ],
     },
     {
-      text: 'should treat 500 Internal Server Error as dead: https://httpstat.us/500',
+      text:
+        'should treat 500 Internal Server Error as dead: https://httpstat.us/500',
       errors: [
         {
-          message: 'https://httpstat.us/500 is dead. (500 Internal Server Error)',
+          message:
+            'https://httpstat.us/500 is dead. (500 Internal Server Error)',
           line: 1,
           column: 49,
         },
       ],
     },
     {
-      text: 'should locate the exact index of a URL in a plain text: https://httpstat.us/404',
+      text:
+        'should locate the exact index of a URL in a plain text: https://httpstat.us/404',
       ext: '.txt',
       errors: [
         {
@@ -86,7 +95,8 @@ tester.run('no-dead-link', rule, {
       ],
     },
     {
-      text: 'should throw "No base URI is provided" error if checkRelative is true but baseURI is undefined: [no base](index.html)',
+      text:
+        'should throw "No base URI is provided" error if checkRelative is true but baseURI is undefined: [no base](index.html)',
       options: {
         checkRelative: true,
       },
