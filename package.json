@@ -19,9 +19,9 @@
   "keywords": ["textlint", "rule"],
   "author": "nodaguti",
   "license": "MIT",
-  "bugs": "https://github.com/nodaguti/textlint-rule-no-dead-link/issues",
-  "homepage": "https://github.com/nodaguti/textlint-rule-no-dead-link",
-  "repository": "nodaguti/textlint-rule-no-dead-link",
+  "bugs": "https://github.com/textlint-rule/textlint-rule-no-dead-link/issues",
+  "homepage": "https://github.com/textlint-rule/textlint-rule-no-dead-link",
+  "repository": "textlint-rule/textlint-rule-no-dead-link",
   "dependencies": {
     "isomorphic-fetch": "^2.2.1",
     "textlint-rule-helper": "^2.0.0"

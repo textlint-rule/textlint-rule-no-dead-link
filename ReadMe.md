@@ -2,9 +2,9 @@
 
 [![textlint rule](https://img.shields.io/badge/textlint-fixable-green.svg?style=social)](https://textlint.github.io/)
 [![npm version](https://badge.fury.io/js/textlint-rule-no-dead-link.svg)](https://badge.fury.io/js/textlint-rule-no-dead-link)
-[![Build Status](https://travis-ci.org/nodaguti/textlint-rule-no-dead-link.svg?branch=master)](https://travis-ci.org/nodaguti/textlint-rule-no-dead-link)
-[![Dependency Status](https://david-dm.org/nodaguti/textlint-rule-no-dead-link.svg)](https://david-dm.org/nodaguti/textlint-rule-no-dead-link)
-[![devDependency Status](https://david-dm.org/nodaguti/textlint-rule-no-dead-link/dev-status.svg)](https://david-dm.org/nodaguti/textlint-rule-no-dead-link#info=devDependencies)
+[![Build Status](https://travis-ci.org/textlint-rule/textlint-rule-no-dead-link.svg?branch=master)](https://travis-ci.org/textlint-rule/textlint-rule-no-dead-link)
+[![Dependency Status](https://david-dm.org/textlint-rule/textlint-rule-no-dead-link.svg)](https://david-dm.org/textlint-rule/textlint-rule-no-dead-link)
+[![devDependency Status](https://david-dm.org/textlint-rule/textlint-rule-no-dead-link/dev-status.svg)](https://david-dm.org/textlint-rule/textlint-rule-no-dead-link#info=devDependencies)
 
 [textlint](https://github.com/textlint/textlint) rule
 to make sure every link in a document is available.
