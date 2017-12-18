@@ -163,9 +163,9 @@ function reporter(context, options = {}) {
         return;
       }
       // Ignore HTML5 place holder link. Ex) <a>Placeholder Link</a>
-      if (typeof node.url === "undefined") {
+      if (typeof node.url === 'undefined') {
         return;
-      }      
+      }
       // [text](http://example.com)
       //       ^
       const index = node.raw.indexOf(node.url) || 0;
