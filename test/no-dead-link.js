@@ -61,6 +61,17 @@ tester.run('no-dead-link', rule, {
       ],
     },
     {
+      text: 'should treat 302 [link](https://httpstat.us/302)',
+      output: 'should treat 302 [link](https://httpstat.us/)',
+      errors: [
+        {
+          message: 'https://httpstat.us/302 is redirected. (302 Found)',
+          line: 1,
+          column: 25,
+        },
+      ],
+    },
+    {
       text: 'should treat 404 Not Found as dead: https://httpstat.us/404',
       errors: [
         {

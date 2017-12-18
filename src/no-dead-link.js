@@ -22,14 +22,27 @@ function isRelative(uri) {
 }
 
 /**
+ * Return `true` if the `code` is redirect status code.
+ * @see https://fetch.spec.whatwg.org/#redirect-status
+ * @param {number} code
+ * @returns {boolean}
+ */
+function isRedirect(code) {
+  return (
+    code === 301 || code === 302 || code === 303 || code === 307 || code === 308
+  );
+}
+
+/**
  * Checks if a given URI is alive or not.
  * @param {string} uri
+ * @param {string} method
  * @return {{ ok: boolean, redirect?: string, message: string }}
  */
-async function isAlive(uri) {
+async function isAlive(uri, method = 'HEAD') {
   try {
     const opts = {
-      method: 'HEAD',
+      method,
       // Disable gzip compression in Node.js
       // to avoid the zlib's "unexpected end of file" error
       // https://github.com/request/request/issues/2045
@@ -39,10 +52,13 @@ async function isAlive(uri) {
     };
     const res = await fetch(uri, opts);
 
-    if (res.status === 301) {
+    if (isRedirect(res.status)) {
+      // https://github.com/bitinn/node-fetch not support `Response.redirect`.
+      // Instead of it, use fetch with follow option.
       const finalRes = await fetch(uri, {
         method: 'HEAD',
         compress: false,
+        redirect: 'follow',
       });
       return {
         ok: finalRes.ok,
@@ -93,7 +109,10 @@ function reporter(context, options = {}) {
       uri = URL.resolve(opts.baseURI, uri);
     }
 
-    const { ok, redirect, message: msg } = await isAlive(uri);
+    const result = await isAlive(uri);
+    const { ok, redirect, message: msg } = result.ok
+      ? result
+      : await isAlive(uri, 'GET');
 
     if (!ok) {
       const message = `${uri} is dead. (${msg})`;
