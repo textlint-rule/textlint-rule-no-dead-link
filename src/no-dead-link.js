@@ -3,19 +3,18 @@ import fetch from 'isomorphic-fetch';
 import URL from 'url';
 
 const DEFAULT_OPTIONS = {
-  checkRelative: false, // should check relative URLs.
-  baseURI: null, // a base URI to resolve a relative URL.
+  checkRelative: false, // `true` enables availability checks for relative URIs.
+  baseURI: null, // a base URI to resolve relative URIs.
   ignore: [], // URIs to be skipped from availability checks.
 };
 
-// http://stackoverflow.com/a/3809435/951517
-// eslint-disable-next-line max-len
+// Adopted from http://stackoverflow.com/a/3809435/951517
 const URI_REGEXP = /(https?:)?\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)/g;
 
 /**
  * Returns `true` if a given URI is relative.
  * @param {string} uri
- * @return {Boolean}
+ * @return {boolean}
  */
 function isRelative(uri) {
   return URL.parse(uri).protocol === null;
@@ -53,8 +52,8 @@ async function isAlive(uri, method = 'HEAD') {
     const res = await fetch(uri, opts);
 
     if (isRedirect(res.status)) {
-      // https://github.com/bitinn/node-fetch not support `Response.redirect`.
-      // Instead of it, use fetch with follow option.
+      // As https://github.com/bitinn/node-fetch doesn't support `Response.redirect`,
+      // use `fetch` with the following options.
       const finalRes = await fetch(uri, {
         method: 'HEAD',
         compress: false,
