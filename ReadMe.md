@@ -9,7 +9,7 @@
 [textlint](https://github.com/textlint/textlint) rule
 to make sure every link in a document is available.
 
-The primary target of this rule is Markdown documents, while it may also work for plain text documents (See tests).
+The primary target of this rule is Markdown documents, but it also works on plain text documents (See tests).
 
 ## Installation
 
@@ -23,6 +23,26 @@ $ npm install textlint-rule-no-dead-link
 $ npm install textlint textlint-rule-no-dead-link
 $ textlint --rule textlint-rule-no-dead-link text-to-check.txt
 ```
+
+## Features
+
+### Dead Link Detection
+
+Shows an error if a link is dead (i.e. its server returns one of the ["non-ok" responses](https://fetch.spec.whatwg.org/#ok-status)).
+
+### Obsolete Link Detection
+
+[![Fixable](https://img.shields.io/badge/textlint-fixable-green.svg?style=social)](https://textlint.github.io/)
+
+Shows an error if a link is obsolete or moved to another location (i.e. its server returns one of the ["redirect" responses](https://fetch.spec.whatwg.org/#redirect-status)).
+
+This error is fixable and textlint will automatically replace the obsolete links with their new ones if you run it with `--fix` option.
+
+### Relative Link Resolution
+
+Sometimes your files contain relative URIs, which don't have domain information in an URI string.
+
+You can enable availability checks to such links by telling the rule how to resolve the relative links (See below for details).
 
 ## Options
 
@@ -66,7 +86,7 @@ Example:
 
 ### ignore
 
-An array of URIs to be ignored, i.e. skipped from availability checks.
+An array of URIs to be ignored. These URIs will be skipped from the availability checks.
 
 Example:
 
