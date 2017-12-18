@@ -25,7 +25,6 @@ tester.run('no-dead-link', rule, {
       text:
         'should be able to check relative pathes when checkRelative is true: ![robot](index.html)',
       options: {
-        checkRelative: true,
         baseURI: 'https://example.com/',
       },
     },
@@ -34,6 +33,13 @@ tester.run('no-dead-link', rule, {
         'should ignore URLs in the "ignore" option: https://example.com/404.html shouldn\'t be checked.',
       options: {
         ignore: ['https://example.com/404.html'],
+      },
+    },
+    {
+      text:
+        'should ignore relative URIs when `checkRelative` is false: [test](./a.md).',
+      options: {
+        checkRelative: false,
       },
     },
     {

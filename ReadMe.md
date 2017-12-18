@@ -59,12 +59,18 @@ The default options are:
 {
   "rules": {
     "no-dead-link": {
+      checkRelative: true,
       "baseURI": null,
       "ignore": [],
     }
   }
 }
 ```
+
+### checkRelative
+
+This rule checks the availability of relative URIs by default.
+You can turn off the checks by passing `false` to this option.
 
 ### baseURI
 
@@ -93,14 +99,10 @@ An array of URIs to be ignored. These URIs will be skipped from the availability
 Example:
 
 ```
-{
-  "rules": {
-    "no-dead-link": {
-      "ignore": [
-        "http://example.com/not-exist/index.html"
-      ]
-    }
-  }
+"no-dead-link": {
+  "ignore": [
+    "http://example.com/not-exist/index.html"
+  ]
 }
 ```
 

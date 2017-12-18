@@ -4,6 +4,7 @@ import URL from 'url';
 import fs from 'fs-extra';
 
 const DEFAULT_OPTIONS = {
+  checkRelative: true, // {boolean} `false` disables the checks for relative URIs
   baseURI: null, // {String|null} a base URI to resolve relative URIs.
   ignore: [], // {Array<String>} URIs to be skipped from availability checks.
 };
@@ -130,6 +131,10 @@ function reporter(context, options = {}) {
     }
 
     if (isRelative(uri)) {
+      if (!opts.checkRelative) {
+        return;
+      }
+
       const filePath = getFilePath();
       const base = opts.baseURI || filePath;
       if (!base) {
