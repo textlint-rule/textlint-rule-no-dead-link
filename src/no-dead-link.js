@@ -39,40 +39,49 @@ function isRedirect(code) {
  * @return {{ ok: boolean, redirect?: string, message: string }}
  */
 async function isAlive(uri, method = 'HEAD') {
+  const opts = {
+    method,
+    // Disable gzip compression in Node.js
+    // to avoid the zlib's "unexpected end of file" error
+    // https://github.com/request/request/issues/2045
+    compress: false,
+    // Use `manual` redirect behaviour to get HTTP redirect status code
+    // and see what kind of redirect is occurring
+    redirect: 'manual',
+  };
+
   try {
-    const opts = {
-      method,
-      // Disable gzip compression in Node.js
-      // to avoid the zlib's "unexpected end of file" error
-      // https://github.com/request/request/issues/2045
-      compress: false,
-      // manual redirect
-      redirect: 'manual',
-    };
     const res = await fetch(uri, opts);
 
     if (isRedirect(res.status)) {
-      // As https://github.com/bitinn/node-fetch doesn't support `Response.redirect`,
-      // use `fetch` with the following options.
-      const finalRes = await fetch(uri, {
-        method: 'HEAD',
-        compress: false,
-        redirect: 'follow',
-      });
+      const finalRes = await fetch(
+        uri,
+        Object.assign({}, opts, { redirect: 'follow' }),
+      );
+
       return {
         ok: finalRes.ok,
-        redirect: finalRes.url,
+        redirected: true,
+        redirectTo: finalRes.url,
         message: `${res.status} ${res.statusText}`,
       };
     }
+
     return {
       ok: res.ok,
       message: `${res.status} ${res.statusText}`,
     };
-  } catch (err) {
+  } catch (ex) {
+    // Retry with `GET` method if the request failed
+    // as some servers don't accept `HEAD` requests but are OK with `GET` requests.
+    // https://github.com/textlint-rule/textlint-rule-no-dead-link/pull/86
+    if (method === 'HEAD') {
+      return isAlive(uri, 'GET');
+    }
+
     return {
       ok: false,
-      message: err.message,
+      message: ex.message,
     };
   }
 }
@@ -109,23 +118,20 @@ function reporter(context, options = {}) {
     }
 
     const result = await isAlive(uri);
-    const { ok, redirect, message: msg } = result.ok
-      ? result
-      : await isAlive(uri, 'GET');
+    const { ok, redirected, redirectTo, message } = result;
 
     if (!ok) {
-      const message = `${uri} is dead. (${msg})`;
-      report(node, new RuleError(message, { index }));
-    } else if (redirect) {
-      const message = `${uri} is redirected. (${msg})`;
-      const fix = fixer.replaceTextRange([index, index + uri.length], redirect);
-      report(
-        node,
-        new RuleError(message, {
-          fix,
-          index,
-        }),
+      const lintMessage = `${uri} is dead. (${message})`;
+
+      report(node, new RuleError(lintMessage, { index }));
+    } else if (redirected) {
+      const lintMessage = `${uri} is redirected. (${message})`;
+      const fix = fixer.replaceTextRange(
+        [index, index + uri.length],
+        redirectTo,
       );
+
+      report(node, new RuleError(lintMessage, { fix, index }));
     }
   };
 
