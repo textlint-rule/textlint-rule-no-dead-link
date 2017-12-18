@@ -109,6 +109,7 @@ function reporter(context, options = {}) {
 
       if (!opts.baseURI) {
         const message = 'The base URI is not specified.';
+
         report(node, new RuleError(message, { index: 0 }));
         return;
       }
@@ -159,6 +160,7 @@ function reporter(context, options = {}) {
       while ((matched = URI_REGEXP.exec(text))) {
         const uri = matched[0];
         const { index } = matched;
+
         URIs.push({ node, uri, index });
       }
     },
@@ -167,13 +169,17 @@ function reporter(context, options = {}) {
       if (helper.isChildNode(node, [Syntax.BlockQuote])) {
         return;
       }
-      // Ignore HTML5 place holder link. Ex) <a>Placeholder Link</a>
+
+      // Ignore HTML5 place holder link.
+      // Ex) <a>Placeholder Link</a>
       if (typeof node.url === 'undefined') {
         return;
       }
+
       // [text](http://example.com)
       //       ^
       const index = node.raw.indexOf(node.url) || 0;
+
       URIs.push({
         node,
         uri: node.url,
