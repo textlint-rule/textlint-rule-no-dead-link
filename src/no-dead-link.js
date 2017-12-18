@@ -1,11 +1,9 @@
 import { RuleHelper } from 'textlint-rule-helper';
 import fetch from 'isomorphic-fetch';
 import URL from 'url';
-import path from 'path';
 import fs from 'fs-extra';
 
 const DEFAULT_OPTIONS = {
-  checkRelative: false, // `true` enables availability checks for relative URIs.
   baseURI: null, // {String|null} a base URI to resolve relative URIs.
   ignore: [], // {Array<String>} URIs to be skipped from availability checks.
 };
@@ -133,8 +131,7 @@ function reporter(context, options = {}) {
 
     if (isRelative(uri)) {
       const filePath = getFilePath();
-      const base = opts.baseURI || (filePath && path.dirname(filePath));
-
+      const base = opts.baseURI || filePath;
       if (!base) {
         const message =
           'Unable to resolve the relative URI. Please check if the base URI is correctly specified.';

@@ -42,6 +42,15 @@ tester.run('no-dead-link', rule, {
         baseURI: path.join(__dirname, 'fixtures/'),
       },
     },
+    {
+      inputPath: path.join(__dirname, 'fixtures/a.md'),
+      options: {
+        baseURI: path.join(__dirname, 'fixtures/'),
+      },
+    },
+    {
+      inputPath: path.join(__dirname, 'fixtures/a.md'),
+    },
   ],
   invalid: [
     {
@@ -123,6 +132,23 @@ tester.run('no-dead-link', rule, {
             'Unable to resolve the relative URI. Please check if the base URI is correctly specified.',
           line: 1,
           column: 61,
+        },
+      ],
+    },
+    {
+      inputPath: path.join(__dirname, 'fixtures/b.md'),
+      errors: [
+        {
+          line: 1,
+          column: 14,
+        },
+        {
+          line: 2,
+          column: 14,
+        },
+        {
+          line: 3,
+          column: 14,
         },
       ],
     },
