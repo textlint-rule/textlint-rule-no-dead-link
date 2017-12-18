@@ -1,5 +1,7 @@
 /* eslint-disable max-len */
 import TextlintTester from 'textlint-tester';
+import fs from 'fs';
+import path from 'path';
 import rule from '../src/no-dead-link';
 
 const tester = new TextlintTester();
@@ -32,6 +34,12 @@ tester.run('no-dead-link', rule, {
         'should ignore URLs in the "ignore" option: https://example.com/404.html shouldn\'t be checked.',
       options: {
         ignore: ['https://example.com/404.html'],
+      },
+    },
+    {
+      text: fs.readFileSync(path.join(__dirname, 'fixtures/a.md'), 'utf-8'),
+      options: {
+        baseURI: path.join(__dirname, 'fixtures/'),
       },
     },
   ],
@@ -108,15 +116,13 @@ tester.run('no-dead-link', rule, {
     },
     {
       text:
-        'should throw "No base URI is provided" error if checkRelative is true but baseURI is undefined: [no base](index.html)',
-      options: {
-        checkRelative: true,
-      },
+        'should throw when a relative URI cannot be resolved: [test](./a.md).',
       errors: [
         {
-          message: 'The base URI is not specified.',
+          message:
+            'Unable to resolve the relative URI. Please check if the base URI is correctly specified.',
           line: 1,
-          column: 97,
+          column: 61,
         },
       ],
     },

@@ -23,6 +23,7 @@
   "homepage": "https://github.com/textlint-rule/textlint-rule-no-dead-link",
   "repository": "textlint-rule/textlint-rule-no-dead-link",
   "dependencies": {
+    "fs-extra": "^5.0.0",
     "isomorphic-fetch": "^2.2.1",
     "textlint-rule-helper": "^2.0.0"
   },

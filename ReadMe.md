@@ -41,8 +41,13 @@ This error is fixable and textlint will automatically replace the obsolete links
 ### Relative Link Resolution
 
 Sometimes your files contain relative URIs, which don't have domain information in an URI string.
+In this case, we have to somehow resolve the relative URIs and convert them into absolute URIs.
 
-You can enable availability checks to such links by telling the rule how to resolve the relative links (See below for details).
+The resolution strategy is as follows:
+
+1. If `baseURI` is specified, use that path to resolve relative URIs (See the below section for details).
+2. If not, try to get the path of the file being linted and use its parent folder as the base path.
+3. If that's not available (e.g., when you are performing linting from API), put an error `Unable to resolve the relative URI`.
 
 ## Options
 
@@ -54,7 +59,6 @@ The default options are:
 {
   "rules": {
     "no-dead-link": {
-      "checkRelative": false,
       "baseURI": null,
       "ignore": [],
     }
@@ -62,25 +66,23 @@ The default options are:
 }
 ```
 
-### checkRelative
-
-Enable the dead link checks against relative URIs.
-Note that you also have to specify the `baseURI` to make this option work.
-
 ### baseURI
 
 The base URI to be used for resolving relative URIs.
 
-Example:
+Though its name, you can pass either an URI starting with `http` or `https`, or an file path starting with `/`.
+
+Examples:
 
 ```
-{
-  "rules": {
-    "no-dead-link": {
-      "checkRelative": true,
-      "baseURI": "http://example.com/"
-    }
-  }
+"no-dead-link": {
+  "baseURI": "http://example.com/"
+}
+```
+
+```
+"no-dead-link": {
+  "baseURI": "/Users/textlint/path/to/parent/folder/"
 }
 ```
 

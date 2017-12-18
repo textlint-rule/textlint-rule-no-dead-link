@@ -1,11 +1,13 @@
 import { RuleHelper } from 'textlint-rule-helper';
 import fetch from 'isomorphic-fetch';
 import URL from 'url';
+import path from 'path';
+import fs from 'fs-extra';
 
 const DEFAULT_OPTIONS = {
   checkRelative: false, // `true` enables availability checks for relative URIs.
-  baseURI: null, // a base URI to resolve relative URIs.
-  ignore: [], // URIs to be skipped from availability checks.
+  baseURI: null, // {String|null} a base URI to resolve relative URIs.
+  ignore: [], // {Array<String>} URIs to be skipped from availability checks.
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
@@ -18,6 +20,15 @@ const URI_REGEXP = /(?:https?:)?\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z
  */
 function isRelative(uri) {
   return URL.parse(uri).protocol === null;
+}
+
+/**
+ * Returns if a given URI indicates a local file.
+ * @param {string} uri
+ * @return {boolean}
+ */
+function isLocal(uri) {
+  return isRelative(uri);
 }
 
 /**
@@ -38,7 +49,7 @@ function isRedirect(code) {
  * @param {string} method
  * @return {{ ok: boolean, redirect?: string, message: string }}
  */
-async function isAlive(uri, method = 'HEAD') {
+async function isAliveURI(uri, method = 'HEAD') {
   const opts = {
     method,
     // Disable gzip compression in Node.js
@@ -76,7 +87,7 @@ async function isAlive(uri, method = 'HEAD') {
     // as some servers don't accept `HEAD` requests but are OK with `GET` requests.
     // https://github.com/textlint-rule/textlint-rule-no-dead-link/pull/86
     if (method === 'HEAD') {
-      return isAlive(uri, 'GET');
+      return isAliveURI(uri, 'GET');
     }
 
     return {
@@ -86,8 +97,26 @@ async function isAlive(uri, method = 'HEAD') {
   }
 }
 
+/**
+ * Check if a given file exists
+ */
+async function isAliveLocalFile(filePath) {
+  try {
+    await fs.access(filePath.replace(/[?#].*?$/, ''));
+
+    return {
+      ok: true,
+    };
+  } catch (ex) {
+    return {
+      ok: false,
+      message: ex.message,
+    };
+  }
+}
+
 function reporter(context, options = {}) {
-  const { Syntax, getSource, report, RuleError, fixer } = context;
+  const { Syntax, getSource, report, RuleError, fixer, getFilePath } = context;
   const helper = new RuleHelper(context);
   const opts = Object.assign({}, DEFAULT_OPTIONS, options);
 
@@ -103,22 +132,24 @@ function reporter(context, options = {}) {
     }
 
     if (isRelative(uri)) {
-      if (!opts.checkRelative) {
-        return;
-      }
+      const filePath = getFilePath();
+      const base = opts.baseURI || (filePath && path.dirname(filePath));
 
-      if (!opts.baseURI) {
-        const message = 'The base URI is not specified.';
+      if (!base) {
+        const message =
+          'Unable to resolve the relative URI. Please check if the base URI is correctly specified.';
 
-        report(node, new RuleError(message, { index: 0 }));
+        report(node, new RuleError(message, { index }));
         return;
       }
 
       // eslint-disable-next-line no-param-reassign
-      uri = URL.resolve(opts.baseURI, uri);
+      uri = URL.resolve(base, uri);
     }
 
-    const result = await isAlive(uri);
+    const result = isLocal(uri)
+      ? await isAliveLocalFile(uri)
+      : await isAliveURI(uri);
     const { ok, redirected, redirectTo, message } = result;
 
     if (!ok) {
