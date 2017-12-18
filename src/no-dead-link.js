@@ -126,7 +126,7 @@ function reporter(context, options = {}) {
 
       report(node, new RuleError(lintMessage, { index }));
     } else if (redirected) {
-      const lintMessage = `${uri} is redirected. (${message})`;
+      const lintMessage = `${uri} is redirected to ${redirectTo}. (${message})`;
       const fix = fixer.replaceTextRange(
         [index, index + uri.length],
         redirectTo,

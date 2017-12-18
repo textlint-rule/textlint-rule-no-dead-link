@@ -42,7 +42,7 @@ tester.run('no-dead-link', rule, {
       errors: [
         {
           message:
-            'https://httpstat.us/301 is redirected. (301 Moved Permanently)',
+            'https://httpstat.us/301 is redirected to https://httpstat.us/. (301 Moved Permanently)',
           line: 1,
           column: 18,
         },
@@ -54,7 +54,7 @@ tester.run('no-dead-link', rule, {
       errors: [
         {
           message:
-            'https://httpstat.us/301 is redirected. (301 Moved Permanently)',
+            'https://httpstat.us/301 is redirected to https://httpstat.us/. (301 Moved Permanently)',
           line: 1,
           column: 25,
         },
@@ -65,7 +65,8 @@ tester.run('no-dead-link', rule, {
       output: 'should treat 302 [link](https://httpstat.us/)',
       errors: [
         {
-          message: 'https://httpstat.us/302 is redirected. (302 Found)',
+          message:
+            'https://httpstat.us/302 is redirected to https://httpstat.us/. (302 Found)',
           line: 1,
           column: 25,
         },
