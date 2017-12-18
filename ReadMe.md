@@ -55,13 +55,13 @@ Please write your configurations in `.textlintrc`.
 
 The default options are:
 
-```
+```json
 {
   "rules": {
     "no-dead-link": {
-      checkRelative: true,
+      "checkRelative": true,
       "baseURI": null,
-      "ignore": [],
+      "ignore": []
     }
   }
 }
@@ -80,13 +80,13 @@ Though its name, you can pass either an URI starting with `http` or `https`, or 
 
 Examples:
 
-```
+```json
 "no-dead-link": {
   "baseURI": "http://example.com/"
 }
 ```
 
-```
+```json
 "no-dead-link": {
   "baseURI": "/Users/textlint/path/to/parent/folder/"
 }
@@ -98,7 +98,7 @@ An array of URIs to be ignored. These URIs will be skipped from the availability
 
 Example:
 
-```
+```json
 "no-dead-link": {
   "ignore": [
     "http://example.com/not-exist/index.html"
