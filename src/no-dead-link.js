@@ -9,7 +9,7 @@ const DEFAULT_OPTIONS = {
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
-const URI_REGEXP = /(https?:)?\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)/g;
+const URI_REGEXP = /(?:https?:)?\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_+.~#?&//=]*)/g;
 
 /**
  * Returns `true` if a given URI is relative.
@@ -154,15 +154,12 @@ function reporter(context, options = {}) {
       }
 
       const text = getSource(node);
-      let matched;
 
-      // eslint-disable-next-line no-cond-assign
-      while ((matched = URI_REGEXP.exec(text))) {
-        const uri = matched[0];
-        const { index } = matched;
-
+      // Use `String#replace` instead of `RegExp#exec` to allow us
+      // perform RegExp matches in an iterate and immutable manner
+      text.replace(URI_REGEXP, (uri, index) => {
         URIs.push({ node, uri, index });
-      }
+      });
     },
 
     [Syntax.Link](node) {
