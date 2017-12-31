@@ -3,6 +3,7 @@
 [![textlint rule](https://img.shields.io/badge/textlint-fixable-green.svg?style=social)](https://textlint.github.io/)
 [![npm](https://img.shields.io/npm/v/textlint-rule-no-dead-link.svg)](https://www.npmjs.com/package/textlint-rule-no-dead-link)
 [![Build Status](https://travis-ci.org/textlint-rule/textlint-rule-no-dead-link.svg?branch=master)](https://travis-ci.org/textlint-rule/textlint-rule-no-dead-link)
+[![Build status](https://ci.appveyor.com/api/projects/status/mkllnrt580c33hcw/branch/master?svg=true)](https://ci.appveyor.com/project/textlintrule/textlint-rule-no-dead-link/branch/master)
 [![Dependency Status](https://david-dm.org/textlint-rule/textlint-rule-no-dead-link.svg)](https://david-dm.org/textlint-rule/textlint-rule-no-dead-link)
 [![devDependency Status](https://david-dm.org/textlint-rule/textlint-rule-no-dead-link/dev-status.svg)](https://david-dm.org/textlint-rule/textlint-rule-no-dead-link#info=devDependencies)
 
