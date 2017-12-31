@@ -3,7 +3,7 @@
   "version": "4.1.2",
   "description": "A textlint rule to check if all links are alive",
   "engines": {
-    "node": ">=6"
+    "node": ">=4"
   },
   "main": "lib/no-dead-link.js",
   "scripts": {
