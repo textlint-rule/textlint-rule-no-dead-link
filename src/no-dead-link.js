@@ -2,6 +2,7 @@ import { RuleHelper } from 'textlint-rule-helper';
 import fetch from 'isomorphic-fetch';
 import URL from 'url';
 import fs from 'fs-extra';
+import { isAbsolute } from 'path';
 
 const DEFAULT_OPTIONS = {
   checkRelative: true, // {boolean} `false` disables the checks for relative URIs
@@ -16,17 +17,23 @@ const URI_REGEXP = /(?:https?:)?\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z
  * Returns `true` if a given URI is relative.
  * @param {string} uri
  * @return {boolean}
+ * @see https://github.com/panosoft/is-local-path
  */
 function isRelative(uri) {
-  return URL.parse(uri).protocol === null;
+  const { host } = URL.parse(uri);
+  return host === null || host === '';
 }
 
 /**
  * Returns if a given URI indicates a local file.
  * @param {string} uri
  * @return {boolean}
+ * @see https://nodejs.org/api/path.html#path_path_isabsolute_path
  */
 function isLocal(uri) {
+  if (isAbsolute(uri)) {
+    return true;
+  }
   return isRelative(uri);
 }
 
