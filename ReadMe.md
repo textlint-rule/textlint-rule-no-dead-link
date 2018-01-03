@@ -62,7 +62,8 @@ The default options are:
     "no-dead-link": {
       "checkRelative": true,
       "baseURI": null,
-      "ignore": []
+      "ignore": [],
+      "preferGET": []
     }
   }
 }
@@ -103,6 +104,22 @@ Example:
 "no-dead-link": {
   "ignore": [
     "http://example.com/not-exist/index.html"
+  ]
+}
+```
+
+### preferGET
+
+An array of [origins](https://developer.mozilla.org/en-US/docs/Web/API/URL/origin) to lets the rule connect to the origin's URL by `GET` instead of default `HEAD` request.
+
+Although the rule will fall back to `GET` method when `HEAD` request is failed (status code is not between 200 and 300), in order to shorten time to run your test, you can use this option when you are sure that target origin always returns 5xx for `HEAD` request.
+
+Example:
+
+```json
+"no-dead-link": {
+  "preferGET": [
+    "http://example.com"
   ]
 }
 ```
