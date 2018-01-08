@@ -1,6 +1,6 @@
 {
   "name": "textlint-rule-no-dead-link",
-  "version": "4.1.2",
+  "version": "4.1.3",
   "description": "A textlint rule to check if all links are alive",
   "engines": {
     "node": ">=4"
