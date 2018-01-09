@@ -65,6 +65,13 @@ tester.run('no-dead-link', rule, {
         preferGET: ['https://www.npmjs.com'],
       },
     },
+    {
+      text:
+        'should success with GET method whether the option is specific URL: [npm results for textlint](https://www.npmjs.com/search?q=textlint)',
+      options: {
+        preferGET: ['https://www.npmjs.com/search?q=textlint-rule'],
+      },
+    },
   ],
   invalid: [
     {

@@ -163,7 +163,9 @@ function reporter(context, options = {}) {
     }
 
     const method =
-      opts.preferGET.filter((origin) => getURLOrigin(uri) === origin).length > 0
+      opts.preferGET.filter(
+        (origin) => getURLOrigin(uri) === getURLOrigin(origin),
+      ).length > 0
         ? 'GET'
         : 'HEAD';
 
