@@ -10,6 +10,7 @@ tester.run('no-dead-link', rule, {
   valid: [
     'should be able to check a link in Markdown: [example](https://example.com/)',
     'should be able to check a URL in Markdown: https://example.com/',
+    'should success with retrying on error: [npm results for textlint](https://www.npmjs.com/search?q=textlint)',
     'should treat 200 OK as alive: https://httpstat.us/200',
     {
       text:
@@ -56,6 +57,20 @@ tester.run('no-dead-link', rule, {
     },
     {
       inputPath: path.join(__dirname, 'fixtures/a.md'),
+    },
+    {
+      text:
+        'should success with GET method: [npm results for textlint](https://www.npmjs.com/search?q=textlint)',
+      options: {
+        preferGET: ['https://www.npmjs.com'],
+      },
+    },
+    {
+      text:
+        'should success with GET method whether the option is specific URL: [npm results for textlint](https://www.npmjs.com/search?q=textlint)',
+      options: {
+        preferGET: ['https://www.npmjs.com/search?q=textlint-rule'],
+      },
     },
   ],
   invalid: [

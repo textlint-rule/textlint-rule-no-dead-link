@@ -3,11 +3,13 @@ import fetch from 'isomorphic-fetch';
 import URL from 'url';
 import fs from 'fs-extra';
 import { isAbsolute } from 'path';
+import { getURLOrigin } from 'get-url-origin';
 
 const DEFAULT_OPTIONS = {
   checkRelative: true, // {boolean} `false` disables the checks for relative URIs
   baseURI: null, // {String|null} a base URI to resolve relative URIs.
   ignore: [], // {Array<String>} URIs to be skipped from availability checks.
+  preferGET: [], // {Array<String>} origins to prefer GET over HEAD.
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
@@ -84,6 +86,10 @@ async function isAliveURI(uri, method = 'HEAD') {
       };
     }
 
+    if (!res.ok && method === 'HEAD') {
+      return isAliveURI(uri, 'GET');
+    }
+
     return {
       ok: res.ok,
       message: `${res.status} ${res.statusText}`,
@@ -156,9 +162,16 @@ function reporter(context, options = {}) {
       uri = URL.resolve(base, uri);
     }
 
+    const method =
+      opts.preferGET.filter(
+        (origin) => getURLOrigin(uri) === getURLOrigin(origin),
+      ).length > 0
+        ? 'GET'
+        : 'HEAD';
+
     const result = isLocal(uri)
       ? await isAliveLocalFile(uri)
-      : await isAliveURI(uri);
+      : await isAliveURI(uri, method);
     const { ok, redirected, redirectTo, message } = result;
 
     if (!ok) {
