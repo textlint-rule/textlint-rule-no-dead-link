@@ -2,6 +2,7 @@ import { RuleHelper } from 'textlint-rule-helper';
 import fetch from 'isomorphic-fetch';
 import URL from 'url';
 import fs from 'fs-extra';
+import minimatch from 'minimatch';
 import { isAbsolute } from 'path';
 import { getURLOrigin } from 'get-url-origin';
 
@@ -49,6 +50,10 @@ function isRedirect(code) {
   return (
     code === 301 || code === 302 || code === 303 || code === 307 || code === 308
   );
+}
+
+function isIgnored(uri, ignore = []) {
+  return ignore.some((pattern) => minimatch(uri, pattern));
 }
 
 /**
@@ -139,7 +144,7 @@ function reporter(context, options = {}) {
    * @param {number} index column number the URI is located at.
    */
   const lint = async ({ node, uri, index }) => {
-    if (opts.ignore.indexOf(uri) !== -1) {
+    if (isIgnored(uri, opts.ignore)) {
       return;
     }
 
