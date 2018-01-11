@@ -103,7 +103,8 @@ Example:
 ```json
 "no-dead-link": {
   "ignore": [
-    "http://example.com/not-exist/index.html"
+    "http://example.com/not-exist/index.html",
+    "http://example.com/*"  # Glob format
   ]
 }
 ```

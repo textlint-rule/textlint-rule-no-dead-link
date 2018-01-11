@@ -38,6 +38,13 @@ tester.run('no-dead-link', rule, {
     },
     {
       text:
+        'should ignore URLs in the "ignore" option that glob formatted: https://example.com/404.html shouldn\'t be checked.',
+      options: {
+        ignore: ['https://example.com/*'],
+      },
+    },
+    {
+      text:
         'should ignore relative URIs when `checkRelative` is false: [test](./a.md).',
       options: {
         checkRelative: false,
