@@ -26,6 +26,7 @@
     "fs-extra": "^5.0.0",
     "get-url-origin": "^1.0.1",
     "isomorphic-fetch": "^2.2.1",
+    "minimatch": "^3.0.4",
     "textlint-rule-helper": "^2.0.0"
   },
   "lint-staged": {
