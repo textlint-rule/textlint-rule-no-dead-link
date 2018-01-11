@@ -96,7 +96,8 @@ Examples:
 
 ### ignore
 
-An array of URIs to be ignored. These URIs will be skipped from the availability checks.
+An array of URIs or [glob](https://github.com/isaacs/node-glob "glob")s to be ignored.
+These list will be skipped from the availability checks.
 
 Example:
 
@@ -104,7 +105,7 @@ Example:
 "no-dead-link": {
   "ignore": [
     "http://example.com/not-exist/index.html",
-    "http://example.com/*"  # Glob format
+    "http://example.com/*" // glob format
   ]
 }
 ```
