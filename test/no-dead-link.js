@@ -79,6 +79,13 @@ tester.run('no-dead-link', rule, {
         preferGET: ['https://www.npmjs.com/search?q=textlint-rule'],
       },
     },
+    {
+      text:
+        'should not treat https://httpstat.us/301 when `ignoreRedirects` is true',
+      options: {
+        ignoreRedirects: true,
+      },
+    },
   ],
   invalid: [
     {
