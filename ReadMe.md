@@ -63,7 +63,8 @@ The default options are:
       "checkRelative": true,
       "baseURI": null,
       "ignore": [],
-      "preferGET": []
+      "preferGET": [],
+      "ignoreRedirects": false
     }
   }
 }
@@ -96,7 +97,7 @@ Examples:
 
 ### ignore
 
-An array of URIs or [glob](https://github.com/isaacs/node-glob "glob")s to be ignored.
+An array of URIs or [glob](https://github.com/isaacs/node-glob 'glob')s to be ignored.
 These list will be skipped from the availability checks.
 
 Example:
@@ -125,6 +126,11 @@ Example:
   ]
 }
 ```
+
+### ignoreRedirects
+
+This rule checks for redirects (3xx status codes) and consider's them an error by default.
+To ignore redirects during checks, set this value to `false`.
 
 ## Tests
 
