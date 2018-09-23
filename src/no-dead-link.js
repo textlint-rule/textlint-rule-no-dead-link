@@ -183,7 +183,7 @@ function reporter(context, options = {}) {
       const lintMessage = `${uri} is dead. (${message})`;
 
       report(node, new RuleError(lintMessage, { index }));
-    } else if (redirected) {
+    } else if (redirected && !opts.ignoreRedirects) {
       const lintMessage = `${uri} is redirected to ${redirectTo}. (${message})`;
       const fix = fixer.replaceTextRange(
         [index, index + uri.length],
