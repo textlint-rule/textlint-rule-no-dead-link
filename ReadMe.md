@@ -97,7 +97,7 @@ Examples:
 
 ### ignore
 
-An array of URIs or [glob](https://github.com/isaacs/node-glob 'glob')s to be ignored.
+An array of URIs or [glob](https://github.com/isaacs/node-glob "glob")s to be ignored.
 These list will be skipped from the availability checks.
 
 Example:
