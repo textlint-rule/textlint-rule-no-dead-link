@@ -7,7 +7,7 @@ import { isAbsolute } from 'path';
 import { getURLOrigin } from 'get-url-origin';
 
 const DEFAULT_OPTIONS = {
-  checkRelative: true, // {boolean} `false` disables the checks for relative URIs
+  checkRelative: true, // {boolean} `false` disables the checks for relative URIs.
   baseURI: null, // {String|null} a base URI to resolve relative URIs.
   ignore: [], // {Array<String>} URIs to be skipped from availability checks.
   preferGET: [], // {Array<String>} origins to prefer GET over HEAD.
@@ -83,10 +83,11 @@ async function isAliveURI(uri, method = 'HEAD') {
         Object.assign({}, opts, { redirect: 'follow' }),
       );
 
+      const { hash } = URL.parse(uri);
       return {
         ok: finalRes.ok,
         redirected: true,
-        redirectTo: finalRes.url,
+        redirectTo: hash !== null ? `${finalRes.url}${hash}` : finalRes.url,
         message: `${res.status} ${res.statusText}`,
       };
     }

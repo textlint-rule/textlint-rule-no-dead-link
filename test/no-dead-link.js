@@ -86,6 +86,15 @@ tester.run('no-dead-link', rule, {
         ignoreRedirects: true,
       },
     },
+    {
+      text:
+        'should preserve hash while ignoring redirect: [BDD](http://mochajs.org/#bdd)',
+      output:
+        'should preserve hash while ignoring redirect: [BDD](http://mochajs.org/#bdd)',
+      options: {
+        ignoreRedirects: true,
+      },
+    },
   ],
   invalid: [
     {
@@ -184,6 +193,21 @@ tester.run('no-dead-link', rule, {
         {
           line: 3,
           column: 14,
+        },
+      ],
+    },
+    {
+      text:
+        'should preserve hash while redirecting: [BDD](http://mochajs.org/#bdd)',
+      output:
+        'should preserve hash while redirecting: [BDD](https://mochajs.org/#bdd)',
+      errors: [
+        {
+          message:
+            'http://mochajs.org/#bdd is redirected to https://mochajs.org/#bdd. (301 Moved Permanently)',
+          index: 46,
+          line: 1,
+          column: 47,
         },
       ],
     },
