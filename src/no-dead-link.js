@@ -83,13 +83,11 @@ async function isAliveURI(uri, method = 'HEAD') {
         Object.assign({}, opts, { redirect: 'follow' }),
       );
 
+      const { hash } = URL.parse(uri);
       return {
         ok: finalRes.ok,
         redirected: true,
-        redirectTo:
-          URL.parse(uri).hash !== null
-            ? `${finalRes.url}${URL.parse(uri).hash}`
-            : finalRes.url,
+        redirectTo: hash !== null ? `${finalRes.url}${hash}` : finalRes.url,
         message: `${res.status} ${res.statusText}`,
       };
     }
