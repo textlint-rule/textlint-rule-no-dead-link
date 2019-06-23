@@ -8,6 +8,8 @@ const tester = new TextlintTester();
 
 tester.run('no-dead-link', rule, {
   valid: [
+    'should ignore non-http url [email address](mailto:mail.example.com) by default',
+    'should ignore non-http url [email address](ftp://example.com) by default',
     'should be able to check a link in Markdown: [example](https://example.com/)',
     'should be able to check a URL in Markdown: https://example.com/',
     'should success with retrying on error: [npm results for textlint](https://www.npmjs.com/search?q=textlint)',
