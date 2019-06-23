@@ -4461,11 +4461,7 @@ textlint-rule-helper@^2.1.1:
     structured-source "^3.0.2"
     unist-util-visit "^1.1.0"
 
-<<<<<<< HEAD
 textlint-tester@^5.1.6:
-=======
-textlint-tester@5.1.6:
->>>>>>> origin/master
   version "5.1.6"
   resolved "https://registry.yarnpkg.com/textlint-tester/-/textlint-tester-5.1.6.tgz#0ea5d53a417748984d28e9a718d4af60a71b5f6c"
   integrity sha512-vIid0nh6i240pRnvO9Hr2QopV/OVW+Sx+43Ah0Vy20ug5c2f8buio6+YHisM7sp+IwYA8GXvUn8uIV94S1EUMg==
