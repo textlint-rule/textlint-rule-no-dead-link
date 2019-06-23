@@ -12,7 +12,6 @@
     "test": "npm-run-all lint mocha",
     "lint": "eslint --fix src test",
     "mocha": "mocha",
-    "precommit": "lint-staged",
     "prettier": "prettier --write \"**/*.{js,json,md}\""
   },
   "files": [
@@ -61,5 +60,10 @@
     "prettier": "^1.18.2",
     "textlint": "^11.2.5",
     "textlint-tester": "5.1.6"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   }
 }
