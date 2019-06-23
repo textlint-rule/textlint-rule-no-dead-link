@@ -17,6 +17,15 @@ const DEFAULT_OPTIONS = {
 const URI_REGEXP = /(?:https?:)?\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_+.~#?&//=]*)/g;
 
 /**
+ * Returns `true` if a given URI is https? url.
+ * @param {string} uri
+ * @return {boolean}
+ */
+function isHttp(uri) {
+  const { protocol } = URL.parse(uri);
+  return protocol === "http:" || protocol === "https:"
+}
+/**
  * Returns `true` if a given URI is relative.
  * @param {string} uri
  * @return {boolean}
@@ -168,6 +177,12 @@ function reporter(context, options = {}) {
       uri = URL.resolve(base, uri);
     }
 
+    // Ignore non http external link
+    // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/112
+    if (!isLocal(uri) && !isHttp(uri)) {
+      return;
+    }
+
     const method =
       opts.preferGET.filter(
         (origin) => getURLOrigin(uri) === getURLOrigin(origin),
@@ -231,7 +246,7 @@ function reporter(context, options = {}) {
       if (typeof node.url === 'undefined') {
         return;
       }
-
+      
       // [text](http://example.com)
       //       ^
       const index = node.raw.indexOf(node.url) || 0;
