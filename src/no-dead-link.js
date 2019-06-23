@@ -78,6 +78,13 @@ async function isAliveURI(uri, method = 'HEAD') {
     // to avoid the zlib's "unexpected end of file" error
     // https://github.com/request/request/issues/2045
     compress: false,
+    // Some website require UserAgent and Accept header
+    // to avoid ECONNRESET error
+    // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
+    headers: {
+      'User-Agent': 'textlint-rule-no-dead-link/1.0',
+      'Accept': '*/*'
+    },
     // Use `manual` redirect behaviour to get HTTP redirect status code
     // and see what kind of redirect is occurring
     redirect: 'manual',
