@@ -1,5 +1,5 @@
 import { RuleHelper } from 'textlint-rule-helper';
-import fetch from 'isomorphic-fetch';
+import fetch from 'node-fetch';
 import URL from 'url';
 import fs from 'fs-extra';
 import minimatch from 'minimatch';
@@ -72,6 +72,7 @@ function isIgnored(uri, ignore = []) {
  * @return {{ ok: boolean, redirect?: string, message: string }}
  */
 async function isAliveURI(uri, method = 'HEAD') {
+  const { host } = URL.parse(uri);
   const opts = {
     method,
     // Disable gzip compression in Node.js
@@ -83,13 +84,15 @@ async function isAliveURI(uri, method = 'HEAD') {
     // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
     headers: {
       'User-Agent': 'textlint-rule-no-dead-link/1.0',
-      'Accept': '*/*'
+      'Accept': '*/*',
+      // Same host for target url
+      // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
+      'Host': host
     },
     // Use `manual` redirect behaviour to get HTTP redirect status code
     // and see what kind of redirect is occurring
     redirect: 'manual',
   };
-
   try {
     const res = await fetch(uri, opts);
 
@@ -253,7 +256,7 @@ function reporter(context, options = {}) {
       if (typeof node.url === 'undefined') {
         return;
       }
-      
+
       // [text](http://example.com)
       //       ^
       const index = node.raw.indexOf(node.url) || 0;
