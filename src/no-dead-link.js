@@ -1,5 +1,5 @@
 import { RuleHelper } from 'textlint-rule-helper';
-import fetch from 'isomorphic-fetch';
+import fetch from 'node-fetch';
 import URL from 'url';
 import fs from 'fs-extra';
 import minimatch from 'minimatch';
