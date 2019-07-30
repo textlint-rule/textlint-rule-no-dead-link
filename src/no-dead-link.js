@@ -5,12 +5,15 @@ import fs from 'fs-extra';
 import minimatch from 'minimatch';
 import { isAbsolute } from 'path';
 import { getURLOrigin } from 'get-url-origin';
+import pMemoize from 'p-memoize';
+import pAll from 'p-all';
 
 const DEFAULT_OPTIONS = {
   checkRelative: true, // {boolean} `false` disables the checks for relative URIs.
   baseURI: null, // {String|null} a base URI to resolve relative URIs.
   ignore: [], // {Array<String>} URIs to be skipped from availability checks.
   preferGET: [], // {Array<String>} origins to prefer GET over HEAD.
+  concurrency: 8 // concurrency count of linting link
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
@@ -23,8 +26,9 @@ const URI_REGEXP = /(?:https?:)?\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z
  */
 function isHttp(uri) {
   const { protocol } = URL.parse(uri);
-  return protocol === "http:" || protocol === "https:"
+  return protocol === 'http:' || protocol === 'https:';
 }
+
 /**
  * Returns `true` if a given URI is relative.
  * @param {string} uri
@@ -87,7 +91,7 @@ async function isAliveURI(uri, method = 'HEAD') {
       'Accept': '*/*',
       // Same host for target url
       // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
-      'Host': host
+      'Host': host,
     },
     // Use `manual` redirect behaviour to get HTTP redirect status code
     // and see what kind of redirect is occurring
@@ -156,7 +160,10 @@ function reporter(context, options = {}) {
   const { Syntax, getSource, report, RuleError, fixer, getFilePath } = context;
   const helper = new RuleHelper(context);
   const opts = Object.assign({}, DEFAULT_OPTIONS, options);
-
+  // 30sec cache
+  const memorizedIsAliveURI = pMemoize(isAliveURI, {
+    maxAge: 30 * 1000,
+  });
   /**
    * Checks a given URI's availability and report if it is dead.
    * @param {TextLintNode} node TextLintNode the URI belongs to.
@@ -202,7 +209,7 @@ function reporter(context, options = {}) {
 
     const result = isLocal(uri)
       ? await isAliveLocalFile(uri)
-      : await isAliveURI(uri, method);
+      : await memorizedIsAliveURI(uri, method);
     const { ok, redirected, redirectTo, message } = result;
 
     if (!ok) {
@@ -269,7 +276,10 @@ function reporter(context, options = {}) {
     },
 
     [`${context.Syntax.Document}:exit`]() {
-      return Promise.all(URIs.map((item) => lint(item)));
+      const linkTasks = URIs.map((item) => () => lint(item));
+      return pAll(linkTasks, {
+        concurrency: opts.concurrency
+      });
     },
   };
 }

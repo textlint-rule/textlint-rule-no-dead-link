@@ -45,6 +45,8 @@
     "get-url-origin": "^1.0.1",
     "minimatch": "^3.0.4",
     "node-fetch": "^2.6.0",
+    "p-all": "^2.1.0",
+    "p-memoize": "^3.1.0",
     "textlint-rule-helper": "^2.1.1"
   },
   "devDependencies": {
