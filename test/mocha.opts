@@ -1,2 +1,2 @@
---require babel-core/register
+--require textlint-scripts/register
 --timeout 20000
