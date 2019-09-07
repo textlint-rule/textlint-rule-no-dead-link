@@ -13,7 +13,8 @@ const DEFAULT_OPTIONS = {
   baseURI: null, // {String|null} a base URI to resolve relative URIs.
   ignore: [], // {Array<String>} URIs to be skipped from availability checks.
   preferGET: [], // {Array<String>} origins to prefer GET over HEAD.
-  concurrency: 8 // concurrency count of linting link
+  concurrency: 8, // {number} Concurrency count of  linting link,
+  retry: 3, // {number} Count of retring
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
@@ -71,11 +72,19 @@ function isIgnored(uri, ignore = []) {
 
 /**
  * Checks if a given URI is alive or not.
+ *
+ * Normally, this method following strategiry about retry
+ *
+ * 1. Head
+ * 2. Get
+ * 3. Get
+ *
  * @param {string} uri
  * @param {string} method
+ * @param {number} retryCount
  * @return {{ ok: boolean, redirect?: string, message: string }}
  */
-async function isAliveURI(uri, method = 'HEAD') {
+async function isAliveURI(uri, method = 'HEAD', retryCount = 3) {
   const { host } = URL.parse(uri);
   const opts = {
     method,
@@ -115,10 +124,14 @@ async function isAliveURI(uri, method = 'HEAD') {
       };
     }
 
-    if (!res.ok && method === 'HEAD') {
-      return isAliveURI(uri, 'GET');
+    if (!res.ok && method === 'HEAD' && retryCount > 0) {
+      return isAliveURI(uri, 'GET', retryCount - 1);
     }
 
+    // try to retry if retry count > 0
+    if (retryCount > 0) {
+      return isAliveURI(uri, 'GET', retryCount - 1);
+    }
     return {
       ok: res.ok,
       message: `${res.status} ${res.statusText}`,
@@ -128,7 +141,7 @@ async function isAliveURI(uri, method = 'HEAD') {
     // as some servers don't accept `HEAD` requests but are OK with `GET` requests.
     // https://github.com/textlint-rule/textlint-rule-no-dead-link/pull/86
     if (method === 'HEAD') {
-      return isAliveURI(uri, 'GET');
+      return isAliveURI(uri, 'GET', retryCount);
     }
 
     return {
@@ -169,8 +182,9 @@ function reporter(context, options = {}) {
    * @param {TextLintNode} node TextLintNode the URI belongs to.
    * @param {string} uri a URI string to be linted.
    * @param {number} index column number the URI is located at.
+   * @param {number} retryCount retry count of linting
    */
-  const lint = async ({ node, uri, index }) => {
+  const lint = async ({ node, uri, index }, retryCount = opts.retry) => {
     if (isIgnored(uri, opts.ignore)) {
       return;
     }
@@ -209,12 +223,11 @@ function reporter(context, options = {}) {
 
     const result = isLocal(uri)
       ? await isAliveLocalFile(uri)
-      : await memorizedIsAliveURI(uri, method);
+      : await memorizedIsAliveURI(uri, method, retryCount);
     const { ok, redirected, redirectTo, message } = result;
 
     if (!ok) {
       const lintMessage = `${uri} is dead. (${message})`;
-
       report(node, new RuleError(lintMessage, { index }));
     } else if (redirected && !opts.ignoreRedirects) {
       const lintMessage = `${uri} is redirected to ${redirectTo}. (${message})`;
@@ -278,7 +291,7 @@ function reporter(context, options = {}) {
     [`${context.Syntax.Document}:exit`]() {
       const linkTasks = URIs.map((item) => () => lint(item));
       return pAll(linkTasks, {
-        concurrency: opts.concurrency
+        concurrency: opts.concurrency,
       });
     },
   };
