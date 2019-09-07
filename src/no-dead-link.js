@@ -141,7 +141,7 @@ async function isAliveURI(uri, method = 'HEAD', retryCount = 3) {
     // as some servers don't accept `HEAD` requests but are OK with `GET` requests.
     // https://github.com/textlint-rule/textlint-rule-no-dead-link/pull/86
     if (method === 'HEAD') {
-      return isAliveURI(uri, 'GET', retryCount);
+      return isAliveURI(uri, 'GET', retryCount - 1);
     }
 
     return {
