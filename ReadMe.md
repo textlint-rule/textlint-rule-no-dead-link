@@ -136,7 +136,7 @@ To ignore redirects during checks, set this value to `false`.
 ### retry
 
 This rule checks the url with retry.
-The default retry count is `3`.
+The default max retry count is `3`.
 
 ## Tests
 
