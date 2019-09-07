@@ -12,7 +12,6 @@ tester.run('no-dead-link', rule, {
     'should ignore non-http url [ftp](ftp://example.com) by default',
     'should ignore non-http url [websockets](ws://example.com) by default',
     'should be able to check a link in Markdown: [example](https://example.com/)',
-    'should be able to check a link in Markdown: [example](https://jcp.org/en/jsr/detail?id=330)',
     'should be able to check a link in Markdown: [example](https://dev.mysql.com/downloads/mysql/)',
     'should be able to check a URL in Markdown: https://example.com/',
     'should success with retrying on error: [npm results for textlint](https://www.npmjs.com/search?q=textlint)',

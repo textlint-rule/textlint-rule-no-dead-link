@@ -6,7 +6,7 @@ import minimatch from 'minimatch';
 import { isAbsolute } from 'path';
 import { getURLOrigin } from 'get-url-origin';
 import pMemoize from 'p-memoize';
-import pAll from 'p-all';
+import PQueue from 'p-queue';
 import * as http from 'http';
 import * as https from 'https';
 
@@ -15,9 +15,11 @@ const DEFAULT_OPTIONS = {
   baseURI: null, // {String|null} a base URI to resolve relative URIs.
   ignore: [], // {Array<String>} URIs to be skipped from availability checks.
   preferGET: [], // {Array<String>} origins to prefer GET over HEAD.
-  concurrency: 2, // {number} Concurrency count of linting link
   retry: 3, // {number} Max retry count
-  keepAlive: true, // {boolean} if it is true, use keepAlive for checking request [experimental]
+  concurrency: 8, // {number} Concurrency count of linting link [Experimental]
+  interval: 500, // The length of time in milliseconds before the interval count resets. Must be finite. [Experimental]
+  intervalCap: 8, // The max number of runs in the given interval of time. [Experimental]
+  keepAlive: false, // {boolean} if it is true, use keepAlive for checking request [Experimental]
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
@@ -338,10 +340,13 @@ function reporter(context, options = {}) {
     },
 
     [`${context.Syntax.Document}:exit`]() {
-      const linkTasks = URIs.map((item) => () => lint(item, opts.retry));
-      return pAll(linkTasks, {
+      const queue = new PQueue({
         concurrency: opts.concurrency,
+        intervalCap: opts.intervalCap,
+        interval: opts.interval
       });
+      const linkTasks = URIs.map((item) => () => lint(item, opts.retry));
+      return queue.addAll(linkTasks);
     },
   };
 }

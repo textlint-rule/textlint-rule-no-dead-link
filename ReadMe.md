@@ -65,7 +65,6 @@ The default options are:
       "ignore": [],
       "preferGET": [],
       "ignoreRedirects": false,
-      "concurrency": 8,
       "retry": 3
     }
   }
@@ -134,11 +133,14 @@ Example:
 This rule checks for redirects (3xx status codes) and consider's them an error by default.
 To ignore redirects during checks, set this value to `false`.
 
+<!-- Experimental 
+
 ### concurrency
 
 This rule checks links concurrently.
 The default concurrency count is `8`.
 
+-->
 ### retry
 
 This rule checks the url with retry.
