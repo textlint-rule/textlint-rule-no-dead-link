@@ -7,14 +7,17 @@ import { isAbsolute } from 'path';
 import { getURLOrigin } from 'get-url-origin';
 import pMemoize from 'p-memoize';
 import pAll from 'p-all';
+import * as http from 'http';
+import * as https from 'https';
 
 const DEFAULT_OPTIONS = {
   checkRelative: true, // {boolean} `false` disables the checks for relative URIs.
   baseURI: null, // {String|null} a base URI to resolve relative URIs.
   ignore: [], // {Array<String>} URIs to be skipped from availability checks.
   preferGET: [], // {Array<String>} origins to prefer GET over HEAD.
-  concurrency: 8, // {number} Concurrency count of  linting link,
+  concurrency: 2, // {number} Concurrency count of linting link
   retry: 3, // {number} Max retry count
+  keepAlive: true, // {boolean} if it is true, use keepAlive for checking request [experimental]
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
@@ -82,89 +85,119 @@ function waitTimeMs(ms) {
 }
 
 /**
- * Checks if a given URI is alive or not.
- *
- * Normally, this method following strategiry about retry
- *
- * 1. Head
- * 2. Get
- * 3. Get
- *
- * @param {string} uri
- * @param {string} method
- * @param {number} maxRetryCount
- * @param {number} currentRetryCount
- * @return {{ ok: boolean, redirect?: string, message: string }}
+ * Create isAliveURI function with options
+ * @param {object} options
+ * @returns {isAliveURI}
  */
-async function isAliveURI(uri, method = 'HEAD', maxRetryCount = 3, currentRetryCount = 0) {
-  const { host } = URL.parse(uri);
-  const opts = {
-    method,
-    // Disable gzip compression in Node.js
-    // to avoid the zlib's "unexpected end of file" error
-    // https://github.com/request/request/issues/2045
-    compress: false,
-    // Some website require UserAgent and Accept header
-    // to avoid ECONNRESET error
-    // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
-    headers: {
-      'User-Agent': 'textlint-rule-no-dead-link/1.0',
-      'Accept': '*/*',
-      // Same host for target url
-      // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
-      'Host': host,
-    },
-    // Use `manual` redirect behaviour to get HTTP redirect status code
-    // and see what kind of redirect is occurring
-    redirect: 'manual',
+const createCheckAliveURL = (options) => {
+  const keepAliveAgents = {
+    http: new http.Agent({ keepAlive: true }),
+    https: new https.Agent({ keepAlive: true }),
   };
-  try {
-    const res = await fetch(uri, opts);
+  /**
+   * Use library agent, avoid to use global.http(s)Agent
+   * Want to avoid Socket hang up
+   * @param parsedURL
+   * @returns {module:http.Agent|null|module:https.Agent}
+   */
+  const getAgent = (parsedURL) => {
+    if (!options.keepAlive) {
+      return null;
+    }
+    if (parsedURL.protocol === 'http:') {
+      return keepAliveAgents.http;
+    }
+    return keepAliveAgents.https;
+  };
+  /**
+   * Checks if a given URI is alive or not.
+   *
+   * Normally, this method following strategiry about retry
+   *
+   * 1. Head
+   * 2. Get
+   * 3. Get
+   *
+   * @param {string} uri
+   * @param {string} method
+   * @param {number} maxRetryCount
+   * @param {number} currentRetryCount
+   * @return {{ ok: boolean, redirect?: string, message: string }}
+   */
+  return async function isAliveURI(uri, method = 'HEAD', maxRetryCount = 3, currentRetryCount = 0) {
+    const { host } = URL.parse(uri);
 
-    if (isRedirect(res.status)) {
-      const finalRes = await fetch(
-        uri,
-        Object.assign({}, opts, { redirect: 'follow' }),
-      );
+    const opts = {
+      method,
+      // Disable gzip compression in Node.js
+      // to avoid the zlib's "unexpected end of file" error
+      // https://github.com/request/request/issues/2045
+      compress: false,
+      // Some website require UserAgent and Accept header
+      // to avoid ECONNRESET error
+      // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
+      headers: {
+        'User-Agent': 'textlint-rule-no-dead-link/1.0',
+        'Accept': '*/*',
+        // Same host for target url
+        // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
+        'Host': host,
+      },
+      // Use `manual` redirect behaviour to get HTTP redirect status code
+      // and see what kind of redirect is occurring
+      redirect: 'manual',
+      // custom http(s).agent
+      agent: getAgent,
+    };
+    try {
+      const res = await fetch(uri, opts);
 
-      const { hash } = URL.parse(uri);
+      if (isRedirect(res.status)) {
+        const finalRes = await fetch(
+          uri,
+          Object.assign({}, opts, { redirect: 'follow' }),
+        );
+
+        const { hash } = URL.parse(uri);
+        return {
+          ok: finalRes.ok,
+          redirected: true,
+          redirectTo: hash !== null ? `${finalRes.url}${hash}` : finalRes.url,
+          message: `${res.status} ${res.statusText}`,
+        };
+      }
+
+      if (!res.ok && method === 'HEAD' && currentRetryCount < maxRetryCount) {
+        return isAliveURI(uri, 'GET', maxRetryCount, currentRetryCount + 1);
+      }
+
+      // try to fetch again if not reach max retry count
+      if (currentRetryCount < maxRetryCount) {
+        // exponential retry
+        // 0ms -> 100ms -> 200ms -> 400ms -> 800ms ...
+        await waitTimeMs((currentRetryCount ** 2) * 100);
+        return isAliveURI(uri, 'GET', maxRetryCount, currentRetryCount + 1);
+      }
       return {
-        ok: finalRes.ok,
-        redirected: true,
-        redirectTo: hash !== null ? `${finalRes.url}${hash}` : finalRes.url,
+        ok: res.ok,
         message: `${res.status} ${res.statusText}`,
       };
-    }
+    } catch (ex) {
+      // Retry with `GET` method if the request failed
+      // as some servers don't accept `HEAD` requests but are OK with `GET` requests.
+      // https://github.com/textlint-rule/textlint-rule-no-dead-link/pull/86
+      if (method === 'HEAD' && currentRetryCount < maxRetryCount) {
+        return isAliveURI(uri, 'GET', maxRetryCount, currentRetryCount + 1);
+      }
 
-    if (!res.ok && method === 'HEAD' && currentRetryCount < maxRetryCount) {
-      return isAliveURI(uri, 'GET', maxRetryCount, currentRetryCount + 1);
+      return {
+        ok: false,
+        message: ex.message,
+      };
     }
+  };
 
-    // try to fetch again if not reach max retry count
-    if (currentRetryCount < maxRetryCount) {
-      // exponential retry
-      // 0ms -> 100ms -> 200ms -> 400ms -> 800ms ...
-      await waitTimeMs((currentRetryCount ** 2) * 100);
-      return isAliveURI(uri, 'GET', maxRetryCount, currentRetryCount + 1);
-    }
-    return {
-      ok: res.ok,
-      message: `${res.status} ${res.statusText}`,
-    };
-  } catch (ex) {
-    // Retry with `GET` method if the request failed
-    // as some servers don't accept `HEAD` requests but are OK with `GET` requests.
-    // https://github.com/textlint-rule/textlint-rule-no-dead-link/pull/86
-    if (method === 'HEAD' && currentRetryCount < maxRetryCount) {
-      return isAliveURI(uri, 'GET', maxRetryCount, currentRetryCount + 1);
-    }
-
-    return {
-      ok: false,
-      message: ex.message,
-    };
-  }
-}
+};
 
 /**
  * Check if a given file exists
@@ -188,7 +221,8 @@ function reporter(context, options = {}) {
   const { Syntax, getSource, report, RuleError, fixer, getFilePath } = context;
   const helper = new RuleHelper(context);
   const opts = Object.assign({}, DEFAULT_OPTIONS, options);
-  // 30sec cache
+  const isAliveURI = createCheckAliveURL(opts);
+  // 30sec memorized
   const memorizedIsAliveURI = pMemoize(isAliveURI, {
     maxAge: 30 * 1000,
   });
