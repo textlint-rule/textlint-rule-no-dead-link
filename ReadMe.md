@@ -64,7 +64,8 @@ The default options are:
       "baseURI": null,
       "ignore": [],
       "preferGET": [],
-      "ignoreRedirects": false
+      "ignoreRedirects": false,
+      "retry": 3
     }
   }
 }
@@ -131,6 +132,11 @@ Example:
 
 This rule checks for redirects (3xx status codes) and consider's them an error by default.
 To ignore redirects during checks, set this value to `false`.
+
+### retry
+
+This rule checks the url with retry.
+The default max retry count is `3`.
 
 ## Tests
 
