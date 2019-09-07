@@ -14,7 +14,7 @@ const DEFAULT_OPTIONS = {
   ignore: [], // {Array<String>} URIs to be skipped from availability checks.
   preferGET: [], // {Array<String>} origins to prefer GET over HEAD.
   concurrency: 8, // {number} Concurrency count of  linting link,
-  retry: 3, // {number} Count of retring
+  retry: 3, // {number} Max retry count
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
@@ -71,6 +71,17 @@ function isIgnored(uri, ignore = []) {
 }
 
 /**
+ * wait for ms and resolve the promise
+ * @param ms
+ * @returns {Promise<any>}
+ */
+function waitTimeMs(ms) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
+
+/**
  * Checks if a given URI is alive or not.
  *
  * Normally, this method following strategiry about retry
@@ -81,10 +92,11 @@ function isIgnored(uri, ignore = []) {
  *
  * @param {string} uri
  * @param {string} method
- * @param {number} retryCount
+ * @param {number} maxRetryCount
+ * @param {number} currentRetryCount
  * @return {{ ok: boolean, redirect?: string, message: string }}
  */
-async function isAliveURI(uri, method = 'HEAD', retryCount = 3) {
+async function isAliveURI(uri, method = 'HEAD', maxRetryCount = 3, currentRetryCount = 0) {
   const { host } = URL.parse(uri);
   const opts = {
     method,
@@ -124,13 +136,16 @@ async function isAliveURI(uri, method = 'HEAD', retryCount = 3) {
       };
     }
 
-    if (!res.ok && method === 'HEAD' && retryCount > 0) {
-      return isAliveURI(uri, 'GET', retryCount - 1);
+    if (!res.ok && method === 'HEAD' && currentRetryCount < maxRetryCount) {
+      return isAliveURI(uri, 'GET', maxRetryCount, currentRetryCount + 1);
     }
 
-    // try to retry if retry count > 0
-    if (retryCount > 0) {
-      return isAliveURI(uri, 'GET', retryCount - 1);
+    // try to fetch again if not reach max retry count
+    if (currentRetryCount < maxRetryCount) {
+      // exponential retry
+      // 0ms -> 100ms -> 200ms -> 400ms -> 800ms ...
+      await waitTimeMs((currentRetryCount ** 2) * 100);
+      return isAliveURI(uri, 'GET', maxRetryCount, currentRetryCount + 1);
     }
     return {
       ok: res.ok,
@@ -140,8 +155,8 @@ async function isAliveURI(uri, method = 'HEAD', retryCount = 3) {
     // Retry with `GET` method if the request failed
     // as some servers don't accept `HEAD` requests but are OK with `GET` requests.
     // https://github.com/textlint-rule/textlint-rule-no-dead-link/pull/86
-    if (method === 'HEAD') {
-      return isAliveURI(uri, 'GET', retryCount - 1);
+    if (method === 'HEAD' && currentRetryCount < maxRetryCount) {
+      return isAliveURI(uri, 'GET', maxRetryCount, currentRetryCount + 1);
     }
 
     return {
@@ -182,9 +197,9 @@ function reporter(context, options = {}) {
    * @param {TextLintNode} node TextLintNode the URI belongs to.
    * @param {string} uri a URI string to be linted.
    * @param {number} index column number the URI is located at.
-   * @param {number} retryCount retry count of linting
+   * @param {number} maxRetryCount retry count of linting
    */
-  const lint = async ({ node, uri, index }, retryCount = opts.retry) => {
+  const lint = async ({ node, uri, index }, maxRetryCount) => {
     if (isIgnored(uri, opts.ignore)) {
       return;
     }
@@ -223,7 +238,7 @@ function reporter(context, options = {}) {
 
     const result = isLocal(uri)
       ? await isAliveLocalFile(uri)
-      : await memorizedIsAliveURI(uri, method, retryCount);
+      : await memorizedIsAliveURI(uri, method, maxRetryCount);
     const { ok, redirected, redirectTo, message } = result;
 
     if (!ok) {
@@ -289,7 +304,7 @@ function reporter(context, options = {}) {
     },
 
     [`${context.Syntax.Document}:exit`]() {
-      const linkTasks = URIs.map((item) => () => lint(item));
+      const linkTasks = URIs.map((item) => () => lint(item, opts.retry));
       return pAll(linkTasks, {
         concurrency: opts.concurrency,
       });
