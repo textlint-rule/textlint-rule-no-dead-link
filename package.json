@@ -46,22 +46,22 @@
     "minimatch": "^3.0.4",
     "node-fetch": "^2.6.0",
     "p-memoize": "^3.1.0",
-    "p-queue": "^6.1.1",
+    "p-queue": "^6.2.0",
     "textlint-rule-helper": "^2.1.1"
   },
   "devDependencies": {
-    "eslint": "^6.1.0",
-    "eslint-config-airbnb-base": "^13.2.0",
-    "eslint-config-prettier": "^6.0.0",
+    "eslint": "^6.5.1",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-prettier": "^6.4.0",
     "eslint-plugin-immutable": "^1.0.0",
     "eslint-plugin-import": "^2.18.2",
-    "husky": "^3.0.2",
-    "lint-staged": "^9.2.1",
+    "husky": "^3.0.9",
+    "lint-staged": "^9.4.2",
     "npm-run-all": "^4.1.5",
     "prettier": "^1.18.2",
-    "textlint": "^11.3.1",
-    "textlint-scripts": "^3.0.0-beta.1",
-    "textlint-tester": "^5.1.9"
+    "textlint": "^11.4.0",
+    "textlint-scripts": "^3.0.0",
+    "textlint-tester": "^5.1.10"
   },
   "engines": {
     "node": ">=4"
