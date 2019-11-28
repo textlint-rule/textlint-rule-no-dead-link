@@ -202,7 +202,6 @@ const createCheckAliveURL = (ruleOptions) => {
         return isAliveURI(uri, 'GET', maxRetryCount, currentRetryCount + 1);
       }
 
-      console.log('error', ex);
       return {
         ok: false,
         message: ex.message,
