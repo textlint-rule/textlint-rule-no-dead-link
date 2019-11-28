@@ -19,7 +19,7 @@
   "scripts": {
     "build": "textlint-scripts build",
     "lint": "eslint --fix src test",
-    "unittest": "textlint-scripts test --no-timeout",
+    "unittest": "textlint-scripts test",
     "prettier": "prettier --write \"**/*.{js,json,md}\"",
     "prepublish": "npm run --if-present build",
     "test": "npm-run-all lint unittest",
