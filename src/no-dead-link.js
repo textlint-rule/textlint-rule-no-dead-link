@@ -86,16 +86,12 @@ function waitTimeMs(ms) {
   });
 }
 
-/**
- * Create isAliveURI function with options
- * @param {object} options
- * @returns {isAliveURI}
- */
-const createCheckAliveURL = (options) => {
-  const keepAliveAgents = {
-    http: new http.Agent({ keepAlive: true }),
-    https: new https.Agent({ keepAlive: true }),
-  };
+const keepAliveAgents = {
+  http: new http.Agent({ keepAlive: true }),
+  https: new https.Agent({ keepAlive: true }),
+};
+
+const createFetchWithRuleDefaults = (ruleOptions) => {
   /**
    * Use library agent, avoid to use global.http(s)Agent
    * Want to avoid Socket hang up
@@ -103,7 +99,7 @@ const createCheckAliveURL = (options) => {
    * @returns {module:http.Agent|null|module:https.Agent}
    */
   const getAgent = (parsedURL) => {
-    if (!options.keepAlive) {
+    if (!ruleOptions.keepAlive) {
       return null;
     }
     if (parsedURL.protocol === 'http:') {
@@ -111,6 +107,38 @@ const createCheckAliveURL = (options) => {
     }
     return keepAliveAgents.https;
   };
+
+  return (uri, fetchOptions) => {
+    const { host } = URL.parse(uri);
+    return fetch(uri, {
+      ...fetchOptions,
+      // Disable gzip compression in Node.js
+      // to avoid the zlib's "unexpected end of file" error
+      // https://github.com/request/request/issues/2045
+      compress: false,
+      // Some website require UserAgent and Accept header
+      // to avoid ECONNRESET error
+      // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
+      headers: {
+        'User-Agent': 'textlint-rule-no-dead-link/1.0',
+        'Accept': '*/*',
+        // Same host for target url
+        // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
+        'Host': host,
+      },
+      // custom http(s).agent
+      agent: getAgent,
+    });
+  };
+};
+/**
+ * Create isAliveURI function with ruleOptions
+ * @param {object} ruleOptions
+ * @returns {isAliveURI}
+ */
+const createCheckAliveURL = (ruleOptions) => {
+  // Create fetch function for this rule
+  const fetchWithDefaults = createFetchWithRuleDefaults(ruleOptions);
   /**
    * Checks if a given URI is alive or not.
    *
@@ -127,39 +155,21 @@ const createCheckAliveURL = (options) => {
    * @return {{ ok: boolean, redirect?: string, message: string }}
    */
   return async function isAliveURI(uri, method = 'HEAD', maxRetryCount = 3, currentRetryCount = 0) {
-    const { host } = URL.parse(uri);
-
     const opts = {
       method,
-      // Disable gzip compression in Node.js
-      // to avoid the zlib's "unexpected end of file" error
-      // https://github.com/request/request/issues/2045
-      compress: false,
-      // Some website require UserAgent and Accept header
-      // to avoid ECONNRESET error
-      // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
-      headers: {
-        'User-Agent': 'textlint-rule-no-dead-link/1.0',
-        'Accept': '*/*',
-        // Same host for target url
-        // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
-        'Host': host,
-      },
       // Use `manual` redirect behaviour to get HTTP redirect status code
       // and see what kind of redirect is occurring
       redirect: 'manual',
-      // custom http(s).agent
-      agent: getAgent,
     };
     try {
-      const res = await fetch(uri, opts);
-
+      const res = await fetchWithDefaults(uri, opts);
+      // redirected
       if (isRedirect(res.status)) {
-        const finalRes = await fetch(
-          uri,
-          Object.assign({}, opts, { redirect: 'follow' }),
+        const redirectedUrl = res.headers.get('Location');
+        const finalRes = await fetchWithDefaults(
+          redirectedUrl,
+          { ...opts, redirect: 'follow' },
         );
-
         const { hash } = URL.parse(uri);
         return {
           ok: finalRes.ok,
@@ -168,7 +178,7 @@ const createCheckAliveURL = (options) => {
           message: `${res.status} ${res.statusText}`,
         };
       }
-
+      // retry if it is not ok when use head request
       if (!res.ok && method === 'HEAD' && currentRetryCount < maxRetryCount) {
         return isAliveURI(uri, 'GET', maxRetryCount, currentRetryCount + 1);
       }
@@ -222,8 +232,8 @@ async function isAliveLocalFile(filePath) {
 function reporter(context, options = {}) {
   const { Syntax, getSource, report, RuleError, fixer, getFilePath } = context;
   const helper = new RuleHelper(context);
-  const opts = Object.assign({}, DEFAULT_OPTIONS, options);
-  const isAliveURI = createCheckAliveURL(opts);
+  const ruleOptions = { ...DEFAULT_OPTIONS, ...options };
+  const isAliveURI = createCheckAliveURL(ruleOptions);
   // 30sec memorized
   const memorizedIsAliveURI = pMemoize(isAliveURI, {
     maxAge: 30 * 1000,
@@ -236,17 +246,17 @@ function reporter(context, options = {}) {
    * @param {number} maxRetryCount retry count of linting
    */
   const lint = async ({ node, uri, index }, maxRetryCount) => {
-    if (isIgnored(uri, opts.ignore)) {
+    if (isIgnored(uri, ruleOptions.ignore)) {
       return;
     }
 
     if (isRelative(uri)) {
-      if (!opts.checkRelative) {
+      if (!ruleOptions.checkRelative) {
         return;
       }
 
       const filePath = getFilePath();
-      const base = opts.baseURI || filePath;
+      const base = ruleOptions.baseURI || filePath;
       if (!base) {
         const message =
           'Unable to resolve the relative URI. Please check if the base URI is correctly specified.';
@@ -266,7 +276,7 @@ function reporter(context, options = {}) {
     }
 
     const method =
-      opts.preferGET.filter(
+      ruleOptions.preferGET.filter(
         (origin) => getURLOrigin(uri) === getURLOrigin(origin),
       ).length > 0
         ? 'GET'
@@ -280,7 +290,7 @@ function reporter(context, options = {}) {
     if (!ok) {
       const lintMessage = `${uri} is dead. (${message})`;
       report(node, new RuleError(lintMessage, { index }));
-    } else if (redirected && !opts.ignoreRedirects) {
+    } else if (redirected && !ruleOptions.ignoreRedirects) {
       const lintMessage = `${uri} is redirected to ${redirectTo}. (${message})`;
       const fix = fixer.replaceTextRange(
         [index, index + uri.length],
@@ -341,11 +351,11 @@ function reporter(context, options = {}) {
 
     [`${context.Syntax.Document}:exit`]() {
       const queue = new PQueue({
-        concurrency: opts.concurrency,
-        intervalCap: opts.intervalCap,
-        interval: opts.interval
+        concurrency: ruleOptions.concurrency,
+        intervalCap: ruleOptions.intervalCap,
+        interval: ruleOptions.interval,
       });
-      const linkTasks = URIs.map((item) => () => lint(item, opts.retry));
+      const linkTasks = URIs.map((item) => () => lint(item, ruleOptions.retry));
       return queue.addAll(linkTasks);
     },
   };

@@ -95,8 +95,13 @@ tester.run('no-dead-link', rule, {
     {
       text:
         'should preserve hash while ignoring redirect: [BDD](http://mochajs.org/#bdd)',
-      output:
-        'should preserve hash while ignoring redirect: [BDD](http://mochajs.org/#bdd)',
+      options: {
+        ignoreRedirects: true,
+      },
+    },
+    // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/125
+    {
+      text: 'ignore redirect https://www.consul.io/intro/getting-started/kv.html',
       options: {
         ignoreRedirects: true,
       },
