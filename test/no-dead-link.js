@@ -106,6 +106,13 @@ tester.run('no-dead-link', rule, {
         ignoreRedirects: true,
       },
     },
+    // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/128
+    {
+      text: 'should treat 200 OK. It requires browser-like User-Agent: https://issues.jenkins-ci.org/browse/JENKINS-59261',
+      options: {
+        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Safari/537.36'
+      }
+    }
   ],
   invalid: [
     {
