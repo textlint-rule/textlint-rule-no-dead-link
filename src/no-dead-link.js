@@ -20,6 +20,7 @@ const DEFAULT_OPTIONS = {
   interval: 500, // The length of time in milliseconds before the interval count resets. Must be finite. [Experimental]
   intervalCap: 8, // The max number of runs in the given interval of time. [Experimental]
   keepAlive: false, // {boolean} if it is true, use keepAlive for checking request [Experimental]
+  userAgent: 'textlint-rule-no-dead-link/1.0' // {String} a UserAgent
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
@@ -120,7 +121,7 @@ const createFetchWithRuleDefaults = (ruleOptions) => {
       // to avoid ECONNRESET error
       // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
       headers: {
-        'User-Agent': 'textlint-rule-no-dead-link/1.0',
+        'User-Agent': ruleOptions.userAgent,
         'Accept': '*/*',
         // Same host for target url
         // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
