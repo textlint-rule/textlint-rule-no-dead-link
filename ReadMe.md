@@ -65,7 +65,8 @@ The default options are:
       "ignore": [],
       "preferGET": [],
       "ignoreRedirects": false,
-      "retry": 3
+      "retry": 3,
+      "userAgent": "textlint-rule-no-dead-link/1.0"
     }
   }
 }
@@ -145,6 +146,10 @@ The default concurrency count is `8`.
 
 This rule checks the url with retry.
 The default max retry count is `3`.
+
+### userAgent
+
+Customize `User-Agent` http header.
 
 ## Tests
 
