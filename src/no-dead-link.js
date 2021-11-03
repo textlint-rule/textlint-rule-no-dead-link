@@ -21,7 +21,7 @@ const DEFAULT_OPTIONS = {
   intervalCap: 8, // The max number of runs in the given interval of time. [Experimental]
   keepAlive: false, // {boolean} if it is true, use keepAlive for checking request [Experimental]
   userAgent: 'textlint-rule-no-dead-link/1.0', // {String} a UserAgent,
-  maxRetryTime: 0, // (number) The max of waiting seconds for retry, if response returns `After-Retry` header.
+  maxRetryTime: 10, // (number) The max of waiting seconds for retry, if response returns `After-Retry` header.
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
