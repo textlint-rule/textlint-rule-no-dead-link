@@ -188,15 +188,16 @@ const createCheckAliveURL = (ruleOptions) => {
       // try to fetch again if not reach max retry count
       if (currentRetryCount < maxRetryCount) {
         const retrySeconds = res.headers.get('Retry-After');
-        if (retrySeconds && retrySeconds <= ruleOptions.maxRetryTime) {
-          await waitTimeMs(retrySeconds * 1000);
-        } else {
-          // exponential retry
-          // 0ms -> 100ms -> 200ms -> 400ms -> 800ms ...
-          await waitTimeMs(currentRetryCount ** 2 * 100);
+        // If the response has `Retry-After` header, prefer it
+        // else exponential retry: 0ms -> 100ms -> 200ms -> 400ms -> 800ms ...
+        const retryWaitTimeMs = retrySeconds !== null ? retrySeconds * 1000 : currentRetryCount ** 2 * 100;
+        const maxRetryTimeMs = ruleOptions.maxRetryTime * 1000;
+        if (retryWaitTimeMs <= maxRetryTimeMs) {
+          await waitTimeMs(retryWaitTimeMs);
         }
         return isAliveURI(uri, 'GET', maxRetryCount, currentRetryCount + 1);
       }
+
       return {
         ok: res.ok,
         message: `${res.status} ${res.statusText}`,
