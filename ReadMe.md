@@ -67,7 +67,7 @@ The default options are:
       "ignoreRedirects": false,
       "retry": 3,
       "userAgent": "textlint-rule-no-dead-link/1.0",
-      "maxRetryTime": 0
+      "maxRetryTime": 10
     }
   }
 }
