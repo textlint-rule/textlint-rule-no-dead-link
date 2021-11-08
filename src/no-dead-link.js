@@ -20,7 +20,8 @@ const DEFAULT_OPTIONS = {
   interval: 500, // The length of time in milliseconds before the interval count resets. Must be finite. [Experimental]
   intervalCap: 8, // The max number of runs in the given interval of time. [Experimental]
   keepAlive: false, // {boolean} if it is true, use keepAlive for checking request [Experimental]
-  userAgent: 'textlint-rule-no-dead-link/1.0' // {String} a UserAgent
+  userAgent: 'textlint-rule-no-dead-link/1.0', // {String} a UserAgent,
+  maxRetryTime: 10, // (number) The max of waiting seconds for retry, if response returns `After-Retry` header.
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
@@ -186,11 +187,17 @@ const createCheckAliveURL = (ruleOptions) => {
 
       // try to fetch again if not reach max retry count
       if (currentRetryCount < maxRetryCount) {
-        // exponential retry
-        // 0ms -> 100ms -> 200ms -> 400ms -> 800ms ...
-        await waitTimeMs((currentRetryCount ** 2) * 100);
+        const retrySeconds = res.headers.get('Retry-After');
+        // If the response has `Retry-After` header, prefer it
+        // else exponential retry: 0ms -> 100ms -> 200ms -> 400ms -> 800ms ...
+        const retryWaitTimeMs = retrySeconds !== null ? retrySeconds * 1000 : currentRetryCount ** 2 * 100;
+        const maxRetryTimeMs = ruleOptions.maxRetryTime * 1000;
+        if (retryWaitTimeMs <= maxRetryTimeMs) {
+          await waitTimeMs(retryWaitTimeMs);
+        }
         return isAliveURI(uri, 'GET', maxRetryCount, currentRetryCount + 1);
       }
+
       return {
         ok: res.ok,
         message: `${res.status} ${res.statusText}`,

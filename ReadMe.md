@@ -66,7 +66,8 @@ The default options are:
       "preferGET": [],
       "ignoreRedirects": false,
       "retry": 3,
-      "userAgent": "textlint-rule-no-dead-link/1.0"
+      "userAgent": "textlint-rule-no-dead-link/1.0",
+      "maxRetryTime": 10
     }
   }
 }
@@ -150,6 +151,10 @@ The default max retry count is `3`.
 ### userAgent
 
 Customize `User-Agent` http header.
+
+### maxRetryTime
+
+The max of allow waiting time [second] for retry, if response header has `Retry-After`.
 
 ## Tests
 
