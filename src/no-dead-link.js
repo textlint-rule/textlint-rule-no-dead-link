@@ -295,17 +295,16 @@ function reporter(context, options = {}) {
       : await memorizedIsAliveURI(uri, method, maxRetryCount);
     const { ok, redirected, redirectTo, message } = result;
 
-    if (!ok) {
-      const lintMessage = `${uri} is dead. (${message})`;
-      report(node, new RuleError(lintMessage, { index }));
-    } else if (redirected && !ruleOptions.ignoreRedirects) {
+    if (redirected && !ruleOptions.ignoreRedirects) {
       const lintMessage = `${uri} is redirected to ${redirectTo}. (${message})`;
       const fix = fixer.replaceTextRange(
         [index, index + uri.length],
         redirectTo,
       );
-
       report(node, new RuleError(lintMessage, { fix, index }));
+    } else if (!ok) {
+      const lintMessage = `${uri} is dead. (${message})`;
+      report(node, new RuleError(lintMessage, { index }));
     }
   };
 

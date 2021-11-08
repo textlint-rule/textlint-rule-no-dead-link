@@ -17,7 +17,7 @@ tester.run('no-dead-link', rule, {
     'should success with retrying on error: [npm results for textlint](https://www.npmjs.com/search?q=textlint)',
     'should treat 200 OK as alive: https://httpstat.us/200',
     'should treat 200 OK. It require User-Agent: Navigate to [MySQL distribution](https://dev.mysql.com/downloads/mysql/) to install MySQL `5.7`.',
-    'should treat 200 OK. It require User-Agent: https://tools.ietf.org/html/rfc6749',
+    'should treat 200 OK. It require User-Agent: https://datatracker.ietf.org/doc/html/rfc6749',
     {
       text:
         'should be able to check a URL in a plain text: https://example.com/',
