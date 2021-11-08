@@ -154,7 +154,9 @@ Customize `User-Agent` http header.
 
 ### maxRetryTime
 
-The max of allow waiting time [second] for retry, if response header has `Retry-After`.
+The max of allow waiting time second for retry, if response header has `Retry-After`.
+
+Default: `10`
 
 ## Tests
 
