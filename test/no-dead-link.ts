@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 import TextlintTester from "textlint-tester";
 import fs from "fs";
 import path from "path";
@@ -6,6 +5,7 @@ import rule from "../src/no-dead-link";
 
 const tester = new TextlintTester();
 
+// @ts-expect-error
 tester.run("no-dead-link", rule, {
     valid: [
         "should ignore non-http url [email address](mailto:mail.example.com) by default",

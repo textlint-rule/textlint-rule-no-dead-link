@@ -13,23 +13,31 @@
   "repository": "textlint-rule/textlint-rule-no-dead-link",
   "license": "MIT",
   "author": "nodaguti",
+  "main": "lib/no-dead-link.js",
+  "types": "lib/no-dead-link.d.ts",
   "files": [
     "lib",
     "src"
   ],
-  "main": "lib/no-dead-link.js",
   "scripts": {
     "build": "textlint-scripts build",
-    "prepublish": "yarn run --if-present build",
-    "test": "textlint-scripts test",
-    "watch": "textlint-scripts build --watch",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,css}\"",
-    "prepare": "git config --local core.hooksPath .githooks"
+    "prepare": "git config --local core.hooksPath .githooks",
+    "prepublish": "yarn run --if-present build",
+    "test": "npm run type-check && textlint-scripts test",
+    "type-check": "tsc --noEmit",
+    "watch": "textlint-scripts build --watch"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,css}": [
       "prettier --write"
     ]
+  },
+  "prettier": {
+    "printWidth": 120,
+    "singleQuote": false,
+    "tabWidth": 4,
+    "trailingComma": "none"
   },
   "dependencies": {
     "fs-extra": "^8.1.0",
@@ -41,20 +49,25 @@
     "textlint-rule-helper": "^2.2.2"
   },
   "devDependencies": {
+    "@textlint/ast-node-types": "^12.2.2",
+    "@textlint/types": "^12.2.2",
+    "@types/minimatch": "^5.1.2",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^18.11.7",
+    "@types/node-fetch": "^2.6.2",
+    "cross-env": "^7.0.3",
     "lint-staged": "^13.0.3",
+    "mocha": "^10.1.0",
     "prettier": "^2.7.1",
     "textlint": "^12.2.2",
     "textlint-scripts": "^12.2.2",
-    "textlint-tester": "^12.2.2"
-  },
-  "engines": {
-    "node": ">=4"
+    "textlint-tester": "^12.2.2",
+    "ts-node": "^10.9.1",
+    "ts-node-test-register": "^10.0.0",
+    "typescript": "^4.8.4"
   },
   "packageManager": "yarn@1.22.15",
-  "prettier": {
-    "singleQuote": false,
-    "printWidth": 120,
-    "tabWidth": 4,
-    "trailingComma": "none"
+  "engines": {
+    "node": ">=4"
   }
 }

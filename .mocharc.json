@@ -1,6 +1,8 @@
 {
-  "require": [
-    "textlint-scripts/register"
+  "extension": [
+    ".ts"
   ],
-  "timeout": "20000"
+  "spec": [
+    "test/**/*.ts"
+  ]
 }
