@@ -1,0 +1,6 @@
+{
+  "require": [
+    "textlint-scripts/register"
+  ],
+  "timeout": "20000"
+}
