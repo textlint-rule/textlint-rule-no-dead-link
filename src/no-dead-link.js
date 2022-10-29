@@ -287,7 +287,7 @@ function reporter(context, options = {}) {
             ? await isAliveLocalFile(uri)
             : await memorizedIsAliveURI(uri, method, maxRetryCount);
         const { ok, redirected, redirectTo, message } = result;
-        // When ignoreRedirects is true, redirected should be ignore
+        // When ignoreRedirects is true, redirected should be ignored
         if (redirected && ruleOptions.ignoreRedirects) {
             return;
         }
@@ -349,7 +349,26 @@ function reporter(context, options = {}) {
             });
         },
 
-        [`${context.Syntax.Document}:exit`]() {
+        // Reference links is markdown specific
+        Definition: function (node) {
+            if (!node.url) {
+                return;
+            }
+
+            // Some link text[1]
+            //
+            // [1]: https://foo.bar
+            //      ^
+            const indexOfUrl = node.raw.indexOf(node.url);
+            const index = indexOfUrl !== -1 ? indexOfUrl : 0;
+            URIs.push({
+                node,
+                uri: node.url,
+                index
+            });
+        },
+
+        [Syntax.DocumentExit]() {
             const queue = new PQueue({
                 concurrency: ruleOptions.concurrency,
                 intervalCap: ruleOptions.intervalCap,

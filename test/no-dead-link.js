@@ -209,6 +209,18 @@ tester.run("no-dead-link", rule, {
                     column: 47
                 }
             ]
+        },
+        {
+            text: `Support Reference link[^1] in Markdown.
+             
+[^1] https://httpstat.us/404`,
+            errors: [
+                {
+                    message: "https://httpstat.us/404 is dead. (404 Not Found)",
+                    line: 3,
+                    column: 6
+                }
+            ]
         }
     ]
 });
