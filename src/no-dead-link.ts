@@ -370,7 +370,7 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
             Array.from(matches).forEach((match) => {
                 const url = match[0];
                 if (url && match.input !== undefined && match.index !== undefined) {
-                    URIs.push({ node, uri: match.input, index: match.index });
+                    URIs.push({ node, uri: url, index: match.index });
                 }
             });
         },
