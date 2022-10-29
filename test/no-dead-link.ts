@@ -112,8 +112,7 @@ tester.run("no-dead-link", rule, {
             errors: [
                 {
                     message: "https://httpstat.us/301 is redirected to https://httpstat.us/. (301 Moved Permanently)",
-                    line: 1,
-                    column: 18
+                    range: [17, 40]
                 }
             ]
         },
@@ -123,8 +122,7 @@ tester.run("no-dead-link", rule, {
             errors: [
                 {
                     message: "https://httpstat.us/301 is redirected to https://httpstat.us/. (301 Moved Permanently)",
-                    line: 1,
-                    column: 25
+                    range: [24, 47]
                 }
             ]
         },
@@ -217,8 +215,16 @@ tester.run("no-dead-link", rule, {
             errors: [
                 {
                     message: "https://httpstat.us/404 is dead. (404 Not Found)",
-                    line: 3,
-                    column: 6
+                    loc: {
+                        start: {
+                            line: 3,
+                            column: 6
+                        },
+                        end: {
+                            line: 3,
+                            column: 29
+                        }
+                    }
                 }
             ]
         }

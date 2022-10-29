@@ -278,7 +278,7 @@ async function isAliveLocalFile(filePath: string): Promise<AliveFunctionReturn> 
 }
 
 const reporter: TextlintRuleReporter<Options> = (context, options) => {
-    const { Syntax, getSource, report, RuleError, fixer, getFilePath } = context;
+    const { Syntax, getSource, report, RuleError, fixer, getFilePath, locator } = context;
     const helper = new RuleHelper(context);
     const ruleOptions = { ...DEFAULT_OPTIONS, ...options };
     const isAliveURI = createCheckAliveURL(ruleOptions);
@@ -309,7 +309,7 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
                 const message =
                     "Unable to resolve the relative URI. Please check if the base URI is correctly specified.";
 
-                report(node, new RuleError(message, { index }));
+                report(node, new RuleError(message, { padding: locator.range([index, index + uri.length]) }));
                 return;
             }
 
@@ -338,11 +338,11 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
         }
         if (!ok) {
             const lintMessage = `${uri} is dead. (${message})`;
-            report(node, new RuleError(lintMessage, { index }));
+            report(node, new RuleError(lintMessage, { padding: locator.range([index, index + uri.length]) }));
         } else if (redirected) {
             const lintMessage = `${uri} is redirected to ${redirectTo}. (${message})`;
             const fix = redirectTo ? fixer.replaceTextRange([index, index + uri.length], redirectTo) : undefined;
-            report(node, new RuleError(lintMessage, { fix, index }));
+            report(node, new RuleError(lintMessage, { fix, padding: locator.range([index, index + uri.length]) }));
         }
     };
 
