@@ -55,7 +55,6 @@
     "@types/mocha": "^10.0.0",
     "@types/node": "^18.11.7",
     "@types/node-fetch": "^2.6.2",
-    "cross-env": "^7.0.3",
     "lint-staged": "^13.0.3",
     "mocha": "^10.1.0",
     "prettier": "^2.7.1",
@@ -69,5 +68,13 @@
   "packageManager": "yarn@1.22.15",
   "engines": {
     "node": ">=4"
+  },
+  "peerDependencies": {
+    "textlint": ">= 12.2.0"
+  },
+  "peerDependenciesMeta": {
+    "textlint": {
+      "optional": true
+    }
   }
 }
