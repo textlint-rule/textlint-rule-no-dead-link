@@ -4,7 +4,9 @@
   "description": "A textlint rule to check if all links are alive",
   "keywords": [
     "rule",
-    "textlint"
+    "textlint",
+    "textlintrule",
+    "link-checker"
   ],
   "homepage": "https://github.com/textlint-rule/textlint-rule-no-dead-link",
   "bugs": "https://github.com/textlint-rule/textlint-rule-no-dead-link/issues",
