@@ -20,10 +20,8 @@
   "main": "lib/no-dead-link.js",
   "scripts": {
     "build": "textlint-scripts build",
-    "lint": "eslint --fix src test",
-    "unittest": "textlint-scripts test",
     "prepublish": "yarn run --if-present build",
-    "test": "npm run lint && npm run unittest",
+    "test": "textlint-scripts test",
     "watch": "textlint-scripts build --watch",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,css}\"",
     "prepare": "git config --local core.hooksPath .githooks"
