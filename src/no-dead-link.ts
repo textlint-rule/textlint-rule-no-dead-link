@@ -9,8 +9,8 @@ import pMemoize from "p-memoize";
 import PQueue from "p-queue";
 import * as http from "http";
 import * as https from "https";
-import { TextlintRuleReporter } from "@textlint/types";
-import { TxtNode } from "@textlint/ast-node-types";
+import type { TextlintRuleReporter } from "@textlint/types";
+import type { TxtNode } from "@textlint/ast-node-types";
 
 export type Options = {
     checkRelative: boolean; // {boolean} `false` disables the checks for relative URIs.
