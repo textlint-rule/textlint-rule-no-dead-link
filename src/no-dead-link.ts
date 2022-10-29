@@ -368,7 +368,8 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
             // perform RegExp matches in an iterate and immutable manner
             const matches = text.matchAll(URI_REGEXP);
             Array.from(matches).forEach((match) => {
-                if (match.input !== undefined && match.index !== undefined) {
+                const url = match[0];
+                if (url && match.input !== undefined && match.index !== undefined) {
                     URIs.push({ node, uri: match.input, index: match.index });
                 }
             });
