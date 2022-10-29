@@ -1,7 +1,7 @@
 import { RuleHelper } from "textlint-rule-helper";
-import fetch from "node-fetch";
+import fetch, { RequestInit } from "node-fetch";
 import URL from "url";
-import fs from "fs-extra";
+import fs from "fs/promises";
 import minimatch from "minimatch";
 import { isAbsolute } from "path";
 import { getURLOrigin } from "get-url-origin";
@@ -9,11 +9,28 @@ import pMemoize from "p-memoize";
 import PQueue from "p-queue";
 import * as http from "http";
 import * as https from "https";
+import { TextlintRuleReporter } from "@textlint/types";
+import { TxtNode } from "@textlint/ast-node-types";
 
-const DEFAULT_OPTIONS = {
+export type Options = {
+    checkRelative: boolean; // {boolean} `false` disables the checks for relative URIs.
+    baseURI: null | string; // {String|null} a base URI to resolve relative URIs.
+    ignore: string[]; // {Array<String>} URIs to be skipped from availability checks.
+    ignoreRedirects: boolean; // {boolean} `false` ignores redirect status codes.
+    preferGET: string[]; // {Array<String>} origins to prefer GET over HEAD.
+    retry: number; // {number} Max retry count
+    concurrency: number; // {number} Concurrency count of linting link [Experimental]
+    interval: number; // The length of time in milliseconds before the interval count resets. Must be finite. [Experimental]
+    intervalCap: number; // The max number of runs in the given interval of time. [Experimental]
+    keepAlive: boolean; // {boolean} if it is true, use keepAlive for checking request [Experimental]
+    userAgent: string; // {String} a UserAgent,
+    maxRetryTime: number; // (number) The max of waiting seconds for retry, if response returns `After-Retry` header.
+};
+const DEFAULT_OPTIONS: Options = {
     checkRelative: true, // {boolean} `false` disables the checks for relative URIs.
     baseURI: null, // {String|null} a base URI to resolve relative URIs.
     ignore: [], // {Array<String>} URIs to be skipped from availability checks.
+    ignoreRedirects: false, // {boolean} `false` ignores redirect status codes.
     preferGET: [], // {Array<String>} origins to prefer GET over HEAD.
     retry: 3, // {number} Max retry count
     concurrency: 8, // {number} Concurrency count of linting link [Experimental]
@@ -33,7 +50,7 @@ const URI_REGEXP =
  * @param {string} uri
  * @return {boolean}
  */
-function isHttp(uri) {
+function isHttp(uri: string) {
     const { protocol } = URL.parse(uri);
     return protocol === "http:" || protocol === "https:";
 }
@@ -44,7 +61,7 @@ function isHttp(uri) {
  * @return {boolean}
  * @see https://github.com/panosoft/is-local-path
  */
-function isRelative(uri) {
+function isRelative(uri: string) {
     const { host } = URL.parse(uri);
     return host === null || host === "";
 }
@@ -55,7 +72,7 @@ function isRelative(uri) {
  * @return {boolean}
  * @see https://nodejs.org/api/path.html#path_path_isabsolute_path
  */
-function isLocal(uri) {
+function isLocal(uri: string) {
     if (isAbsolute(uri)) {
         return true;
     }
@@ -68,11 +85,11 @@ function isLocal(uri) {
  * @param {number} code
  * @returns {boolean}
  */
-function isRedirect(code) {
+function isRedirect(code: number) {
     return code === 301 || code === 302 || code === 303 || code === 307 || code === 308;
 }
 
-function isIgnored(uri, ignore = []) {
+function isIgnored(uri: string, ignore: string[] = []) {
     return ignore.some((pattern) => minimatch(uri, pattern));
 }
 
@@ -81,7 +98,7 @@ function isIgnored(uri, ignore = []) {
  * @param ms
  * @returns {Promise<any>}
  */
-function waitTimeMs(ms) {
+function waitTimeMs(ms: number) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
@@ -92,16 +109,16 @@ const keepAliveAgents = {
     https: new https.Agent({ keepAlive: true })
 };
 
-const createFetchWithRuleDefaults = (ruleOptions) => {
+const createFetchWithRuleDefaults = (ruleOptions: Options) => {
     /**
      * Use library agent, avoid to use global.http(s)Agent
      * Want to avoid Socket hang up
      * @param parsedURL
      * @returns {module:http.Agent|null|module:https.Agent}
      */
-    const getAgent = (parsedURL) => {
+    const getAgent = (parsedURL: URL) => {
         if (!ruleOptions.keepAlive) {
-            return null;
+            return;
         }
         if (parsedURL.protocol === "http:") {
             return keepAliveAgents.http;
@@ -109,7 +126,7 @@ const createFetchWithRuleDefaults = (ruleOptions) => {
         return keepAliveAgents.https;
     };
 
-    return (uri, fetchOptions) => {
+    return (uri: string, fetchOptions: RequestInit) => {
         const { host } = URL.parse(uri);
         return fetch(uri, {
             ...fetchOptions,
@@ -123,21 +140,34 @@ const createFetchWithRuleDefaults = (ruleOptions) => {
             headers: {
                 "User-Agent": ruleOptions.userAgent,
                 Accept: "*/*",
-                // Same host for target url
-                // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
-                Host: host
+                // avoid assign null to Host
+                ...(host
+                    ? {
+                          // Same host for target url
+                          // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
+                          Host: host
+                      }
+                    : {})
             },
             // custom http(s).agent
             agent: getAgent
         });
     };
 };
+
+type AliveFunctionReturn = {
+    ok: boolean;
+    message: string;
+    redirected?: boolean;
+    redirectTo?: string | null;
+};
+
 /**
  * Create isAliveURI function with ruleOptions
  * @param {object} ruleOptions
  * @returns {isAliveURI}
  */
-const createCheckAliveURL = (ruleOptions) => {
+const createCheckAliveURL = (ruleOptions: Options) => {
     // Create fetch function for this rule
     const fetchWithDefaults = createFetchWithRuleDefaults(ruleOptions);
     /**
@@ -155,8 +185,13 @@ const createCheckAliveURL = (ruleOptions) => {
      * @param {number} currentRetryCount
      * @return {{ ok: boolean, redirect?: string, message: string }}
      */
-    return async function isAliveURI(uri, method = "HEAD", maxRetryCount = 3, currentRetryCount = 0) {
-        const opts = {
+    return async function isAliveURI(
+        uri: string,
+        method: string = "HEAD",
+        maxRetryCount: number = 3,
+        currentRetryCount: number = 0
+    ): Promise<AliveFunctionReturn> {
+        const opts: RequestInit = {
             method,
             // Use `manual` redirect behaviour to get HTTP redirect status code
             // and see what kind of redirect is occurring
@@ -167,6 +202,15 @@ const createCheckAliveURL = (ruleOptions) => {
             // redirected
             if (isRedirect(res.status)) {
                 const redirectedUrl = res.headers.get("Location");
+                // Status code is 301 or 302, but Location header is not set
+                if (redirectedUrl === null) {
+                    return {
+                        ok: false,
+                        redirected: true,
+                        redirectTo: null,
+                        message: `${res.status} ${res.statusText}`
+                    };
+                }
                 const finalRes = await fetchWithDefaults(redirectedUrl, { ...opts, redirect: "follow" });
                 const { hash } = URL.parse(uri);
                 return {
@@ -186,7 +230,8 @@ const createCheckAliveURL = (ruleOptions) => {
                 const retrySeconds = res.headers.get("Retry-After");
                 // If the response has `Retry-After` header, prefer it
                 // else exponential retry: 0ms -> 100ms -> 200ms -> 400ms -> 800ms ...
-                const retryWaitTimeMs = retrySeconds !== null ? retrySeconds * 1000 : currentRetryCount ** 2 * 100;
+                const retryWaitTimeMs =
+                    retrySeconds !== null ? Number(retrySeconds) * 1000 : currentRetryCount ** 2 * 100;
                 const maxRetryTimeMs = ruleOptions.maxRetryTime * 1000;
                 if (retryWaitTimeMs <= maxRetryTimeMs) {
                     await waitTimeMs(retryWaitTimeMs);
@@ -198,7 +243,7 @@ const createCheckAliveURL = (ruleOptions) => {
                 ok: res.ok,
                 message: `${res.status} ${res.statusText}`
             };
-        } catch (ex) {
+        } catch (ex: any) {
             // Retry with `GET` method if the request failed
             // as some servers don't accept `HEAD` requests but are OK with `GET` requests.
             // https://github.com/textlint-rule/textlint-rule-no-dead-link/pull/86
@@ -217,14 +262,14 @@ const createCheckAliveURL = (ruleOptions) => {
 /**
  * Check if a given file exists
  */
-async function isAliveLocalFile(filePath) {
+async function isAliveLocalFile(filePath: string): Promise<AliveFunctionReturn> {
     try {
         await fs.access(filePath.replace(/[?#].*?$/, ""));
-
         return {
-            ok: true
+            ok: true,
+            message: "OK"
         };
-    } catch (ex) {
+    } catch (ex: any) {
         return {
             ok: false,
             message: ex.message
@@ -232,7 +277,7 @@ async function isAliveLocalFile(filePath) {
     }
 }
 
-function reporter(context, options = {}) {
+const reporter: TextlintRuleReporter<Options> = (context, options) => {
     const { Syntax, getSource, report, RuleError, fixer, getFilePath } = context;
     const helper = new RuleHelper(context);
     const ruleOptions = { ...DEFAULT_OPTIONS, ...options };
@@ -248,7 +293,7 @@ function reporter(context, options = {}) {
      * @param {number} index column number the URI is located at.
      * @param {number} maxRetryCount retry count of linting
      */
-    const lint = async ({ node, uri, index }, maxRetryCount) => {
+    const lint = async ({ node, uri, index }: { node: TxtNode; uri: string; index: number }, maxRetryCount: number) => {
         if (isIgnored(uri, ruleOptions.ignore)) {
             return;
         }
@@ -296,16 +341,15 @@ function reporter(context, options = {}) {
             report(node, new RuleError(lintMessage, { index }));
         } else if (redirected) {
             const lintMessage = `${uri} is redirected to ${redirectTo}. (${message})`;
-            const fix = fixer.replaceTextRange([index, index + uri.length], redirectTo);
+            const fix = redirectTo ? fixer.replaceTextRange([index, index + uri.length], redirectTo) : undefined;
             report(node, new RuleError(lintMessage, { fix, index }));
         }
     };
 
     /**
      * URIs to be checked.
-     * @type {Array<{ node: TextLintNode, uri: string, index: number }>}
      */
-    const URIs = [];
+    const URIs: { node: TxtNode; uri: string; index: number }[] = [];
 
     return {
         [Syntax.Str](node) {
@@ -322,8 +366,12 @@ function reporter(context, options = {}) {
 
             // Use `String#replace` instead of `RegExp#exec` to allow us
             // perform RegExp matches in an iterate and immutable manner
-            text.replace(URI_REGEXP, (uri, index) => {
-                URIs.push({ node, uri, index });
+            const matches = text.matchAll(URI_REGEXP);
+            Array.from(matches).forEach((match) => {
+                const url = match[0];
+                if (url && match.input !== undefined && match.index !== undefined) {
+                    URIs.push({ node, uri: url, index: match.index });
+                }
             });
         },
 
@@ -378,8 +426,7 @@ function reporter(context, options = {}) {
             return queue.addAll(linkTasks);
         }
     };
-}
-
+};
 export default {
     linter: reporter,
     fixer: reporter
