@@ -64,7 +64,8 @@ The default options are:
       "ignoreRedirects": false,
       "retry": 3,
       "userAgent": "textlint-rule-no-dead-link/1.0",
-      "maxRetryTime": 10
+      "maxRetryTime": 10,
+      "maxRetryAfterTime": 90
     }
   }
 }
@@ -151,9 +152,17 @@ Customize `User-Agent` http header.
 
 ### maxRetryTime
 
-The max of allow waiting time second for retry, if response header has `Retry-After`.
+The max of waiting seconds for retry. It is related to `retry` option.
+
+:memo: It does affect to `Retry-After` header. If you want to max waiting seconds for `Retry-After` header, please use `maxRetryAfterTime` option.
 
 Default: `10`
+
+### maxRetryAfterTime
+
+The max of allow waiting time second for `maxRetryAfterTime` header value.
+
+Default: `90`
 
 ## Tests
 

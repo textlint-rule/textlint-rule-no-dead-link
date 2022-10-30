@@ -24,7 +24,8 @@ export type Options = {
     intervalCap: number; // The max number of runs in the given interval of time. [Experimental]
     keepAlive: boolean; // {boolean} if it is true, use keepAlive for checking request [Experimental]
     userAgent: string; // {String} a UserAgent,
-    maxRetryTime: number; // (number) The max of waiting seconds for retry, if response returns `After-Retry` header.
+    maxRetryTime: number; // (number) The max of waiting seconds for retry. It is related to `retry` option. It does affect to `Retry-After` header.
+    maxRetryAfterTime: number; // (number) The max of waiting seconds for `Retry-After` header.
 };
 const DEFAULT_OPTIONS: Options = {
     checkRelative: true, // {boolean} `false` disables the checks for relative URIs.
@@ -38,7 +39,8 @@ const DEFAULT_OPTIONS: Options = {
     intervalCap: 8, // The max number of runs in the given interval of time. [Experimental]
     keepAlive: false, // {boolean} if it is true, use keepAlive for checking request [Experimental]
     userAgent: "textlint-rule-no-dead-link/1.0", // {String} a UserAgent,
-    maxRetryTime: 10 // (number) The max of waiting seconds for retry, if response returns `After-Retry` header.
+    maxRetryTime: 10, // (number) The max of waiting seconds for retry. It is related to `retry` option. It does affect to `Retry-After` header.
+    maxRetryAfterTime: 90 // (number) The max of waiting seconds for `Retry-After` header.
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
@@ -227,14 +229,21 @@ const createCheckAliveURL = (ruleOptions: Options) => {
 
             // try to fetch again if not reach max retry count
             if (currentRetryCount < maxRetryCount) {
-                const retrySeconds = res.headers.get("Retry-After");
+                const retryAfter = res.headers.get("Retry-After");
                 // If the response has `Retry-After` header, prefer it
-                // else exponential retry: 0ms -> 100ms -> 200ms -> 400ms -> 800ms ...
-                const retryWaitTimeMs =
-                    retrySeconds !== null ? Number(retrySeconds) * 1000 : currentRetryCount ** 2 * 100;
-                const maxRetryTimeMs = ruleOptions.maxRetryTime * 1000;
-                if (retryWaitTimeMs <= maxRetryTimeMs) {
-                    await waitTimeMs(retryWaitTimeMs);
+                if (retryAfter) {
+                    const retryAfterMs = Number(retryAfter) * 1000;
+                    const maxRetryAfterTimeMs = ruleOptions.maxRetryAfterTime * 1000;
+                    if (retryAfterMs <= maxRetryAfterTimeMs) {
+                        await waitTimeMs(retryAfterMs);
+                    }
+                } else {
+                    // exponential retry: 0ms -> 100ms -> 200ms -> 400ms -> 800ms ...
+                    const retryWaitTimeMs = currentRetryCount ** 2 * 100;
+                    const maxRetryTimeMs = ruleOptions.maxRetryTime * 1000;
+                    if (retryWaitTimeMs <= maxRetryTimeMs) {
+                        await waitTimeMs(retryWaitTimeMs);
+                    }
                 }
                 return isAliveURI(uri, "GET", maxRetryCount, currentRetryCount + 1);
             }
