@@ -154,15 +154,18 @@ Customize `User-Agent` http header.
 
 The max of waiting seconds for retry. It is related to `retry` option.
 
-:memo: It does affect to `Retry-After` header. If you want to max waiting seconds for `Retry-After` header, please use `maxRetryAfterTime` option.
+:memo: It does affect to [`Retry-After`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After) header. If you want to max waiting seconds for `Retry-After` header, please use `maxRetryAfterTime` option.
 
 Default: `10`
 
 ### maxRetryAfterTime
 
-The max of allow waiting time second for `maxRetryAfterTime` header value.
+The max of allow waiting time second for [`Retry-After`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After) header value.
 
-Default: `90`
+Some website like GitHub returns `Retry-After` header value with `429 too many requests`.
+This `maxRetryAfterTime` option is for that `Retry-After`.
+
+Default: `10`
 
 ## Tests
 

@@ -40,7 +40,7 @@ const DEFAULT_OPTIONS: Options = {
     keepAlive: false, // {boolean} if it is true, use keepAlive for checking request [Experimental]
     userAgent: "textlint-rule-no-dead-link/1.0", // {String} a UserAgent,
     maxRetryTime: 10, // (number) The max of waiting seconds for retry. It is related to `retry` option. It does affect to `Retry-After` header.
-    maxRetryAfterTime: 90 // (number) The max of waiting seconds for `Retry-After` header.
+    maxRetryAfterTime: 10 // (number) The max of waiting seconds for `Retry-After` header.
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
@@ -231,7 +231,7 @@ const createCheckAliveURL = (ruleOptions: Options) => {
             if (currentRetryCount < maxRetryCount) {
                 const retryAfter = res.headers.get("Retry-After");
                 // If the response has `Retry-After` header, prefer it
-                // e.g. Retry-After: 60 and `maxRetryAfterTime: 90`, wait 60 seconds
+                // e.g. `Retry-After: 60` and `maxRetryAfterTime: 90`, wait 60 seconds
                 if (retryAfter) {
                     const retryAfterMs = Number(retryAfter) * 1000;
                     const maxRetryAfterTimeMs = ruleOptions.maxRetryAfterTime * 1000;
