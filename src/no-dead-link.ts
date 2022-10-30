@@ -231,6 +231,7 @@ const createCheckAliveURL = (ruleOptions: Options) => {
             if (currentRetryCount < maxRetryCount) {
                 const retryAfter = res.headers.get("Retry-After");
                 // If the response has `Retry-After` header, prefer it
+                // e.g. Retry-After: 60 and `maxRetryAfterTime: 90`, wait 60 seconds
                 if (retryAfter) {
                     const retryAfterMs = Number(retryAfter) * 1000;
                     const maxRetryAfterTimeMs = ruleOptions.maxRetryAfterTime * 1000;
