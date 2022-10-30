@@ -7,8 +7,6 @@ import { isAbsolute } from "path";
 import { getURLOrigin } from "get-url-origin";
 import pMemoize from "p-memoize";
 import PQueue from "p-queue";
-import * as http from "http";
-import * as https from "https";
 import type { TextlintRuleReporter } from "@textlint/types";
 import type { TxtNode } from "@textlint/ast-node-types";
 
@@ -22,7 +20,6 @@ export type Options = {
     concurrency: number; // {number} Concurrency count of linting link [Experimental]
     interval: number; // The length of time in milliseconds before the interval count resets. Must be finite. [Experimental]
     intervalCap: number; // The max number of runs in the given interval of time. [Experimental]
-    keepAlive: boolean; // {boolean} if it is true, use keepAlive for checking request [Experimental]
     userAgent: string; // {String} a UserAgent,
     maxRetryTime: number; // (number) The max of waiting seconds for retry. It is related to `retry` option. It does affect to `Retry-After` header.
     maxRetryAfterTime: number; // (number) The max of waiting seconds for `Retry-After` header.
@@ -37,7 +34,6 @@ const DEFAULT_OPTIONS: Options = {
     concurrency: 8, // {number} Concurrency count of linting link [Experimental]
     interval: 500, // The length of time in milliseconds before the interval count resets. Must be finite. [Experimental]
     intervalCap: 8, // The max number of runs in the given interval of time. [Experimental]
-    keepAlive: false, // {boolean} if it is true, use keepAlive for checking request [Experimental]
     userAgent: "textlint-rule-no-dead-link/1.0", // {String} a UserAgent,
     maxRetryTime: 10, // (number) The max of waiting seconds for retry. It is related to `retry` option. It does affect to `Retry-After` header.
     maxRetryAfterTime: 10 // (number) The max of waiting seconds for `Retry-After` header.
@@ -106,28 +102,7 @@ function waitTimeMs(ms: number) {
     });
 }
 
-const keepAliveAgents = {
-    http: new http.Agent({ keepAlive: true }),
-    https: new https.Agent({ keepAlive: true })
-};
-
 const createFetchWithRuleDefaults = (ruleOptions: Options) => {
-    /**
-     * Use library agent, avoid to use global.http(s)Agent
-     * Want to avoid Socket hang up
-     * @param parsedURL
-     * @returns {module:http.Agent|null|module:https.Agent}
-     */
-    const getAgent = (parsedURL: URL) => {
-        if (!ruleOptions.keepAlive) {
-            return;
-        }
-        if (parsedURL.protocol === "http:") {
-            return keepAliveAgents.http;
-        }
-        return keepAliveAgents.https;
-    };
-
     return (uri: string, fetchOptions: RequestInit) => {
         const { host } = URL.parse(uri);
         return fetch(uri, {
@@ -150,9 +125,7 @@ const createFetchWithRuleDefaults = (ruleOptions: Options) => {
                           Host: host
                       }
                     : {})
-            },
-            // custom http(s).agent
-            agent: getAgent
+            }
         });
     };
 };
