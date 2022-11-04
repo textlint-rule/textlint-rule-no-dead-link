@@ -174,6 +174,15 @@ We recommened to use cron job like GitHub Actions.
 
 ### textlint + [SARIF output](https://www.npmjs.com/package/@microsoft/eslint-formatter-sarif) + [code scanning](https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/about-code-scanning)
 
+Preparing:
+
+```shell
+# Install dependencies
+$ npm install --save-dev textlint @microsoft/eslint-formatter-sarif textlint-rule-no-dead-link
+# Create .textlintrc
+$ npx textlint --init
+```
+
 Following actions check links and upload the status to [code scanning](https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/about-code-scanning).
 
 You can see the result at `https://github.com/{owner}/{repo}/security/code-scanning`.
