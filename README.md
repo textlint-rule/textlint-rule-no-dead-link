@@ -167,6 +167,47 @@ This `maxRetryAfterTime` option is for that `Retry-After`.
 
 Default: `10`
 
+## CI Integration
+
+Probably, Link Checking take long times.
+We recommened to use cron job like GitHub Actions.
+
+### textlint + [SARIF output](https://www.npmjs.com/package/@microsoft/eslint-formatter-sarif) + [code scanning](https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/about-code-scanning)
+
+Following actions check links and upload the status to [code scanning](https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/about-code-scanning).
+
+You can see the result at `https://github.com/{owner}/{repo}/security/code-scanning`.
+
+```yaml
+name: Link Check
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '45 15 * * *'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Link Check
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npx textlint -f @microsoft/eslint-formatter-sarif -o textlint.sarif || exit 0 # workaround https://github.com/textlint/textlint/issues/103
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: textlint.sarif
+          category: textlint
+```
+
 ## Tests
 
 ```
