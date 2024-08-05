@@ -60,8 +60,9 @@ The default options are:
       "checkRelative": true,
       "baseURI": null,
       "ignore": [],
-      "preferGET": [],
+      "dotInIgnore": false,
       "ignoreRedirects": false,
+      "preferGET": [],
       "retry": 3,
       "userAgent": "textlint-rule-no-dead-link/1.0",
       "maxRetryTime": 10,
@@ -111,6 +112,14 @@ Example:
   ]
 }
 ```
+
+### dotInIgnore
+
+This rule allows ignore patterns to match filenames starting with a period.
+For example, if the `ignore` option contains `"http://example.com/**"` and the `dotInIgnore` option is set to `true`, paths containing filenames that start with `.` (like `"http://example.com/.hidden/index.html"`) will be ignored.
+You can disable this behavior by setting `dotInIgnore` to `false`.
+
+_cf_, <https://github.com/isaacs/minimatch?tab=readme-ov-file#dot>
 
 ### preferGET
 
