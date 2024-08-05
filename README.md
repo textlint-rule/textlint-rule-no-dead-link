@@ -11,15 +11,15 @@ The primary target of this rule is Markdown documents, but it also works on plai
 
 ## Installation
 
-```
-$ npm install textlint-rule-no-dead-link
+```shell
+npm install textlint-rule-no-dead-link
 ```
 
 ## Usage
 
-```
-$ npm install textlint textlint-rule-no-dead-link
-$ textlint --rule textlint-rule-no-dead-link text-to-check.txt
+```shell
+npm install textlint textlint-rule-no-dead-link
+textlint --rule textlint-rule-no-dead-link text-to-check.txt
 ```
 
 ## Features
@@ -133,7 +133,7 @@ Example:
 This rule checks for redirects (3xx status codes) and consider's them an error by default.
 To ignore redirects during checks, set this value to `false`.
 
-<!-- Experimental 
+<!-- Experimental
 
 ### concurrency
 
@@ -170,7 +170,7 @@ Default: `10`
 ## CI Integration
 
 Probably, Link Checking take long times.
-We recommened to use cron job like GitHub Actions.
+We recommend to use cron job like GitHub Actions.
 
 ### textlint + [SARIF output](https://www.npmjs.com/package/@microsoft/eslint-formatter-sarif) + [code scanning](https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/about-code-scanning)
 
@@ -178,9 +178,9 @@ Preparing:
 
 ```shell
 # Install dependencies
-$ npm install --save-dev textlint @microsoft/eslint-formatter-sarif textlint-rule-no-dead-link
+npm install --save-dev textlint @microsoft/eslint-formatter-sarif textlint-rule-no-dead-link
 # Create .textlintrc
-$ npx textlint --init
+npx textlint --init
 ```
 
 Following actions check links and upload the status to [code scanning](https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/about-code-scanning).
@@ -219,7 +219,7 @@ jobs:
 
 ## Tests
 
-```
+```shell
 npm test
 ```
 
@@ -233,4 +233,4 @@ npm test
 
 ## License
 
-MIT License (http://nodaguti.mit-license.org/)
+MIT License (<http://nodaguti.mit-license.org/>)
