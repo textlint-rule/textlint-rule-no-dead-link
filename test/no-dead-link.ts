@@ -27,7 +27,7 @@ tester.run("no-dead-link", rule, {
             ext: ".txt"
         },
         {
-            text: "should be able to check relative pathes when checkRelative is true: ![robot](index.html)",
+            text: "should be able to check relative paths when checkRelative is true: ![robot](index.html)",
             options: {
                 baseURI: "https://example.com/"
             }
@@ -42,6 +42,13 @@ tester.run("no-dead-link", rule, {
             text: 'should ignore URLs in the "ignore" option that glob formatted: https://example.com/404.html shouldn\'t be checked.',
             options: {
                 ignore: ["https://example.com/*"]
+            }
+        },
+        {
+            text: 'should ignore URLs containing . in their path in the "ignore" option that glob formatted if option is enabled: https://example.com/.hidden/404.html shouldn\'t be checked.',
+            options: {
+                ignore: ["https://example.com/**"],
+                dotInIgnore: true
             }
         },
         {
@@ -210,7 +217,7 @@ tester.run("no-dead-link", rule, {
         },
         {
             text: `Support Reference link[^1] in Markdown.
-             
+
 [^1] https://httpstat.us/404`,
             errors: [
                 {
