@@ -11,15 +11,15 @@ The primary target of this rule is Markdown documents, but it also works on plai
 
 ## Installation
 
-```
-$ npm install textlint-rule-no-dead-link
+```shell
+npm install textlint-rule-no-dead-link
 ```
 
 ## Usage
 
-```
-$ npm install textlint textlint-rule-no-dead-link
-$ textlint --rule textlint-rule-no-dead-link text-to-check.txt
+```shell
+npm install textlint textlint-rule-no-dead-link
+textlint --rule textlint-rule-no-dead-link text-to-check.txt
 ```
 
 ## Features
@@ -60,8 +60,9 @@ The default options are:
       "checkRelative": true,
       "baseURI": null,
       "ignore": [],
-      "preferGET": [],
+      "dotInIgnore": false,
       "ignoreRedirects": false,
+      "preferGET": [],
       "retry": 3,
       "userAgent": "textlint-rule-no-dead-link/1.0",
       "maxRetryTime": 10,
@@ -112,6 +113,14 @@ Example:
 }
 ```
 
+### dotInIgnore
+
+This rule allows ignore patterns to match filenames starting with a period.
+For example, if the `ignore` option contains `"http://example.com/**"` and the `dotInIgnore` option is set to `true`, paths containing filenames that start with `.` (like `"http://example.com/.hidden/index.html"`) will be ignored.
+You can disable this behavior by setting `dotInIgnore` to `false`.
+
+_cf_, <https://github.com/isaacs/minimatch?tab=readme-ov-file#dot>
+
 ### preferGET
 
 An array of [origins](https://url.spec.whatwg.org/#origin) to lets the rule connect to the origin's URL by `GET` instead of default `HEAD` request.
@@ -133,7 +142,7 @@ Example:
 This rule checks for redirects (3xx status codes) and consider's them an error by default.
 To ignore redirects during checks, set this value to `false`.
 
-<!-- Experimental 
+<!-- Experimental
 
 ### concurrency
 
@@ -170,7 +179,7 @@ Default: `10`
 ## CI Integration
 
 Probably, Link Checking take long times.
-We recommened to use cron job like GitHub Actions.
+We recommend to use cron job like GitHub Actions.
 
 ### textlint + [SARIF output](https://www.npmjs.com/package/@microsoft/eslint-formatter-sarif) + [code scanning](https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/about-code-scanning)
 
@@ -178,9 +187,9 @@ Preparing:
 
 ```shell
 # Install dependencies
-$ npm install --save-dev textlint @microsoft/eslint-formatter-sarif textlint-rule-no-dead-link
+npm install --save-dev textlint @microsoft/eslint-formatter-sarif textlint-rule-no-dead-link
 # Create .textlintrc
-$ npx textlint --init
+npx textlint --init
 ```
 
 Following actions check links and upload the status to [code scanning](https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/about-code-scanning).
@@ -219,7 +228,7 @@ jobs:
 
 ## Tests
 
-```
+```shell
 npm test
 ```
 
@@ -233,4 +242,4 @@ npm test
 
 ## License
 
-MIT License (http://nodaguti.mit-license.org/)
+MIT License (<http://nodaguti.mit-license.org/>)

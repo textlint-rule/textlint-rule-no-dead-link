@@ -14,6 +14,7 @@ export type Options = {
     checkRelative: boolean; // {boolean} `false` disables the checks for relative URIs.
     baseURI: null | string; // {String|null} a base URI to resolve relative URIs.
     ignore: string[]; // {Array<String>} URIs to be skipped from availability checks.
+    dotInIgnore: boolean; // {boolean} `true` allows ignore patterns to match filenames starting with a period
     ignoreRedirects: boolean; // {boolean} `false` ignores redirect status codes.
     preferGET: string[]; // {Array<String>} origins to prefer GET over HEAD.
     retry: number; // {number} Max retry count
@@ -28,6 +29,7 @@ const DEFAULT_OPTIONS: Options = {
     checkRelative: true, // {boolean} `false` disables the checks for relative URIs.
     baseURI: null, // {String|null} a base URI to resolve relative URIs.
     ignore: [], // {Array<String>} URIs to be skipped from availability checks.
+    dotInIgnore: false, // {boolean} `true` allows ignore patterns to match filenames starting with a period
     ignoreRedirects: false, // {boolean} `false` ignores redirect status codes.
     preferGET: [], // {Array<String>} origins to prefer GET over HEAD.
     retry: 3, // {number} Max retry count
@@ -87,8 +89,8 @@ function isRedirect(code: number) {
     return code === 301 || code === 302 || code === 303 || code === 307 || code === 308;
 }
 
-function isIgnored(uri: string, ignore: string[] = []) {
-    return ignore.some((pattern) => minimatch(uri, pattern));
+function isIgnored(uri: string, ignore: string[] = [], dotInIgnore: boolean) {
+    return ignore.some((pattern) => minimatch(uri, pattern, { dot: dotInIgnore }));
 }
 
 /**
@@ -148,7 +150,7 @@ const createCheckAliveURL = (ruleOptions: Options) => {
     /**
      * Checks if a given URI is alive or not.
      *
-     * Normally, this method following strategiry about retry
+     * Normally, this method following strategy about retry
      *
      * 1. Head
      * 2. Get
@@ -277,7 +279,7 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
      * @param {number} maxRetryCount retry count of linting
      */
     const lint = async ({ node, uri, index }: { node: TxtNode; uri: string; index: number }, maxRetryCount: number) => {
-        if (isIgnored(uri, ruleOptions.ignore)) {
+        if (isIgnored(uri, ruleOptions.ignore, ruleOptions.dotInIgnore)) {
             return;
         }
 
