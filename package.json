@@ -59,7 +59,7 @@
     "mocha": "^10.1.0",
     "prettier": "^2.7.1",
     "textlint": "^12.2.2",
-    "textlint-scripts": "^12.2.2",
+    "textlint-scripts": "^13.4.1",
     "textlint-tester": "^12.2.2",
     "ts-node": "^10.9.1",
     "ts-node-test-register": "^10.0.0",
