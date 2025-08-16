@@ -40,23 +40,22 @@
     "trailingComma": "none"
   },
   "dependencies": {
-    "minimatch": "^3.0.4",
-    "p-memoize": "^3.1.0",
-    "p-queue": "^6.2.0",
-    "textlint-rule-helper": "^2.2.4"
+    "minimatch": "^10.0.3",
+    "p-memoize": "^8.0.0",
+    "p-queue": "^8.1.0",
+    "textlint-rule-helper": "^2.3.1"
   },
   "devDependencies": {
-    "@textlint/ast-node-types": "^12.6.1",
-    "@textlint/types": "^12.6.1",
-    "@types/minimatch": "^5.1.2",
+    "@textlint/ast-node-types": "^15.2.1",
+    "@textlint/types": "^15.2.1",
     "@types/mocha": "^10.0.0",
     "@types/node": "^24.3.0",
     "lint-staged": "^16.1.5",
     "mocha": "^11.7.1",
     "prettier": "^3.6.2",
-    "textlint": "^12.6.1",
-    "textlint-scripts": "^12.6.1",
-    "textlint-tester": "^12.6.1",
+    "textlint": "^15.2.1",
+    "textlint-scripts": "^15.2.1",
+    "textlint-tester": "^15.2.1",
     "ts-node": "^10.9.1",
     "ts-node-test-register": "^10.0.0",
     "typescript": "^5.9.2"
@@ -67,8 +66,8 @@
   },
   "pnpm": {
     "overrides": {
-      "@textlint/ast-node-types": "^12.6.1",
-      "@textlint/types": "^12.6.1"
+      "@textlint/ast-node-types": "^15.2.1",
+      "@textlint/types": "^15.2.1"
     }
   },
   "peerDependencies": {
