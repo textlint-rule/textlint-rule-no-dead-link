@@ -1,9 +1,8 @@
 import { RuleHelper } from "textlint-rule-helper";
-import URL from "url";
 import fs from "fs/promises";
 import minimatch from "minimatch";
 import { isAbsolute } from "path";
-import { getURLOrigin } from "get-url-origin";
+import { fileURLToPath } from "url";
 import pMemoize from "p-memoize";
 import PQueue from "p-queue";
 import type { TextlintRuleReporter } from "@textlint/types";
@@ -50,8 +49,8 @@ const URI_REGEXP =
  * @return {boolean}
  */
 function isHttp(uri: string) {
-    const { protocol } = URL.parse(uri);
-    return protocol === "http:" || protocol === "https:";
+    const url = URL.parse(uri);
+    return url ? url.protocol === "http:" || url.protocol === "https:" : false;
 }
 
 /**
@@ -61,8 +60,18 @@ function isHttp(uri: string) {
  * @see https://github.com/panosoft/is-local-path
  */
 function isRelative(uri: string) {
-    const { host } = URL.parse(uri);
-    return host === null || host === "";
+    const url = URL.parse(uri);
+    // If URL.parse returns null and it's not an absolute path, it's relative
+    if (!url) {
+        return !isAbsolute(uri);
+    }
+    // If it has a protocol but no host (except for file://), it's not relative
+    // URLs like mailto:, ftp:, ws: etc. have protocol but no host
+    if (url.protocol && url.protocol !== "file:") {
+        return false;
+    }
+    // file:// URLs or URLs without protocol but with no host are relative
+    return !url.host && !isAbsolute(uri);
 }
 
 /**
@@ -105,7 +114,8 @@ function waitTimeMs(ms: number) {
 
 const createFetchWithRuleDefaults = (ruleOptions: Options) => {
     return (uri: string, fetchOptions: RequestInit) => {
-        const { host } = URL.parse(uri);
+        const url = URL.parse(uri);
+        const host = url?.host;
         return fetch(uri, {
             ...fetchOptions,
             // Some website require UserAgent and Accept header
@@ -184,7 +194,8 @@ const createCheckAliveURL = (ruleOptions: Options) => {
                     };
                 }
                 const finalRes = await fetchWithDefaults(redirectedUrl, { ...opts, redirect: "follow" });
-                const { hash } = URL.parse(uri);
+                const url = URL.parse(uri);
+                const hash = url?.hash || null;
                 return {
                     ok: finalRes.ok,
                     redirected: true,
@@ -244,7 +255,10 @@ const createCheckAliveURL = (ruleOptions: Options) => {
  */
 async function isAliveLocalFile(filePath: string): Promise<AliveFunctionReturn> {
     try {
-        await fs.access(filePath.replace(/[?#].*?$/, ""));
+        // Convert file:// URL to path if needed, otherwise use as-is
+        const pathToCheck = filePath.startsWith("file://") ? fileURLToPath(filePath) : filePath;
+
+        await fs.access(pathToCheck.replace(/[?#].*?$/, ""));
         return {
             ok: true,
             message: "OK"
@@ -294,7 +308,12 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
             }
 
             // eslint-disable-next-line no-param-reassign
-            uri = URL.resolve(base, uri);
+            // Convert file path to file:// URL if needed
+            const baseURL = base.startsWith("http") || base.startsWith("file://") ? base : `file://${base}`;
+            const resolved = URL.parse(uri, baseURL);
+            if (resolved) {
+                uri = resolved.href;
+            }
         }
 
         // Ignore non http external link
@@ -304,7 +323,11 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
         }
 
         const method =
-            ruleOptions.preferGET.filter((origin) => getURLOrigin(uri) === getURLOrigin(origin)).length > 0
+            ruleOptions.preferGET.filter((origin) => {
+                const uriURL = URL.parse(uri);
+                const originURL = URL.parse(origin);
+                return uriURL && originURL && uriURL.origin === originURL.origin;
+            }).length > 0
                 ? "GET"
                 : "HEAD";
 
