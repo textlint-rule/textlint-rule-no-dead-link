@@ -408,7 +408,7 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
                 interval: ruleOptions.interval
             });
             const linkTasks = URIs.map((item) => () => lint(item, ruleOptions.retry));
-            return queue.addAll(linkTasks).then(() => {});
+            return queue.addAll(linkTasks);
         }
     };
 };
