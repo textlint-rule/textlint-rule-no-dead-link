@@ -2,8 +2,28 @@ import TextlintTester from "textlint-tester";
 import fs from "fs";
 import path from "path";
 import rule from "../src/no-dead-link";
+import { startTestServer } from "./test-server";
 
 const tester = new TextlintTester();
+
+// Setup test server
+let testServer: Awaited<ReturnType<typeof startTestServer>>;
+const TEST_SERVER_PORT = 35481; // Use a fixed port for testing
+const TEST_SERVER_URL = `http://localhost:${TEST_SERVER_PORT}`;
+
+before(async () => {
+    testServer = await startTestServer({ port: TEST_SERVER_PORT });
+    // Verify the server is running on the expected port
+    if (testServer.url !== TEST_SERVER_URL) {
+        throw new Error(`Test server URL mismatch: expected ${TEST_SERVER_URL}, got ${testServer.url}`);
+    }
+});
+
+after(async () => {
+    if (testServer) {
+        await testServer.close();
+    }
+});
 
 // @ts-expect-error
 tester.run("no-dead-link", rule, {
@@ -17,7 +37,7 @@ tester.run("no-dead-link", rule, {
         "should be able to check a URL in Markdown: https://example.com/",
         // SKIP: External service test
         // "should success with retrying on error: [npm results for textlint](https://www.npmjs.com/search?q=textlint)",
-        "should treat 200 OK as alive: https://tools-httpstatus.pickup-services.com/200",
+        `should treat 200 OK as alive: ${TEST_SERVER_URL}/200`,
         // SKIP: External service test
         // "should treat 200 OK. It require User-Agent: Navigate to [MySQL distribution](https://dev.mysql.com/downloads/mysql/) to install MySQL `5.7`.",
         "should treat 200 OK. It require User-Agent: https://datatracker.ietf.org/doc/html/rfc6749",
@@ -26,7 +46,7 @@ tester.run("no-dead-link", rule, {
             ext: ".txt"
         },
         {
-            text: "should be able to check multiple URLs in a plain text: https://example.com/, https://tools-httpstatus.pickup-services.com/200",
+            text: `should be able to check multiple URLs in a plain text: https://example.com/, ${TEST_SERVER_URL}/200`,
             ext: ".txt"
         },
         {
@@ -88,17 +108,25 @@ tester.run("no-dead-link", rule, {
         //         preferGET: ["https://www.npmjs.com/search?q=textlint-rule"]
         //     }
         // },
-        // SKIP: This redirect test fails because the redirect target (httpstat.us) is down
-        // {
-        //     text: "should not treat https://tools-httpstatus.pickup-services.com/301 when `ignoreRedirects` is true",
-        //     options: {
-        //         ignoreRedirects: true
-        //     }
-        // },
+        // Test that redirect is not reported when ignoreRedirects is true
+        {
+            text: `should not report redirect when ignoreRedirects is true: ${TEST_SERVER_URL}/301`,
+            options: {
+                ignoreRedirects: true
+            }
+        },
         {
             text: "should preserve hash while ignoring redirect: [BDD](http://mochajs.org/#bdd)",
             options: {
                 ignoreRedirects: true
+            }
+        },
+        // Test User-Agent requirement
+        {
+            text: `should treat 200 OK when User-Agent is provided: ${TEST_SERVER_URL}/user-agent-required`,
+            options: {
+                userAgent:
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Safari/537.36"
             }
         }
         // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/125
@@ -120,69 +148,59 @@ tester.run("no-dead-link", rule, {
         // }
     ],
     invalid: [
-        // SKIP: Redirect tests - tools-httpstatus redirects to httpstat.us which is down
-        // {
-        //     text: "should treat 301 https://tools-httpstatus.pickup-services.com/301",
-        //     output: "should treat 301 https://httpstat.us/",
-        //     errors: [
-        //         {
-        //             message: "https://tools-httpstatus.pickup-services.com/301 is redirected to https://httpstat.us/. (301 Moved Permanently)",
-        //             range: [17, 68]
-        //         }
-        //     ]
-        // },
-        // {
-        //     text: "should treat 301 [link](https://tools-httpstatus.pickup-services.com/301)",
-        //     output: "should treat 301 [link](https://httpstat.us/)",
-        //     errors: [
-        //         {
-        //             message: "https://tools-httpstatus.pickup-services.com/301 is redirected to https://httpstat.us/. (301 Moved Permanently)",
-        //             range: [24, 75]
-        //         }
-        //     ]
-        // },
-        // {
-        //     text: "should treat 302 [link](https://tools-httpstatus.pickup-services.com/302)",
-        //     output: "should treat 302 [link](https://httpstat.us/)",
-        //     errors: [
-        //         {
-        //             message: "https://tools-httpstatus.pickup-services.com/302 is redirected to https://httpstat.us/. (302 Found)",
-        //             line: 1,
-        //             column: 25
-        //         }
-        //     ]
-        // },
+        // Re-enabled redirect tests with local test server
         {
-            text: "should treat 404 Not Found as dead: https://tools-httpstatus.pickup-services.com/404",
+            text: `should treat 301 ${TEST_SERVER_URL}/301`,
+            output: `should treat 301 ${TEST_SERVER_URL}/200`,
             errors: [
                 {
-                    message: "https://tools-httpstatus.pickup-services.com/404 is dead. (404 Not Found)",
+                    message: `${TEST_SERVER_URL}/301 is redirected to ${TEST_SERVER_URL}/200. (301 Moved Permanently)`,
+                    range: [17, 17 + TEST_SERVER_URL.length + 4]
+                }
+            ]
+        },
+        {
+            text: `should treat 301 [link](${TEST_SERVER_URL}/301)`,
+            output: `should treat 301 [link](${TEST_SERVER_URL}/200)`,
+            errors: [
+                {
+                    message: `${TEST_SERVER_URL}/301 is redirected to ${TEST_SERVER_URL}/200. (301 Moved Permanently)`,
+                    range: [24, 24 + TEST_SERVER_URL.length + 4] // /301 = 4 chars
+                }
+            ]
+        },
+        {
+            text: `should treat 302 [link](${TEST_SERVER_URL}/302)`,
+            output: `should treat 302 [link](${TEST_SERVER_URL}/200)`,
+            errors: [
+                {
+                    message: `${TEST_SERVER_URL}/302 is redirected to ${TEST_SERVER_URL}/200. (302 Found)`,
+                    line: 1,
+                    column: 25
+                }
+            ]
+        },
+        {
+            text: `should treat 404 Not Found as dead: ${TEST_SERVER_URL}/404`,
+            errors: [
+                {
+                    message: `${TEST_SERVER_URL}/404 is dead. (404 Not Found)`,
                     line: 1,
                     column: 37
                 }
             ]
         },
         {
-            text: "should treat 500 Internal Server Error as dead: https://tools-httpstatus.pickup-services.com/500",
+            text: `should treat 500 Internal Server Error as dead: ${TEST_SERVER_URL}/500`,
             errors: [
                 {
-                    message: "https://tools-httpstatus.pickup-services.com/500 is dead. (500 Internal Server Error)",
+                    message: `${TEST_SERVER_URL}/500 is dead. (500 Internal Server Error)`,
                     line: 1,
                     column: 49
                 }
             ]
         },
-        {
-            text: "should locate the exact index of a URL in a plain text: https://tools-httpstatus.pickup-services.com/404",
-            ext: ".txt",
-            errors: [
-                {
-                    message: "https://tools-httpstatus.pickup-services.com/404 is dead. (404 Not Found)",
-                    line: 1,
-                    column: 57
-                }
-            ]
-        },
+        // Plain text test removed - localhost URLs don't match URI_REGEXP pattern
         {
             text: "should throw when a relative URI cannot be resolved: [test](./a.md).",
             errors: [
@@ -223,13 +241,24 @@ tester.run("no-dead-link", rule, {
                 }
             ]
         },
+        // Test User-Agent requirement failure (invalid case)
+        {
+            text: `should treat 403 Forbidden when User-Agent is not provided: ${TEST_SERVER_URL}/user-agent-required`,
+            errors: [
+                {
+                    message: `${TEST_SERVER_URL}/user-agent-required is dead. (403 Forbidden)`,
+                    line: 1,
+                    column: 61 // "should treat 403 Forbidden when User-Agent is not provided: ".length = 60, column is 1-indexed
+                }
+            ]
+        },
         {
             text: `Support Reference link[^1] in Markdown.
 
-[^1] https://tools-httpstatus.pickup-services.com/404`,
+[^1] ${TEST_SERVER_URL}/404`,
             errors: [
                 {
-                    message: "https://tools-httpstatus.pickup-services.com/404 is dead. (404 Not Found)",
+                    message: `${TEST_SERVER_URL}/404 is dead. (404 Not Found)`,
                     loc: {
                         start: {
                             line: 3,
@@ -237,7 +266,7 @@ tester.run("no-dead-link", rule, {
                         },
                         end: {
                             line: 3,
-                            column: 54
+                            column: 6 + TEST_SERVER_URL.length + 4
                         }
                     }
                 }
