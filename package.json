@@ -46,7 +46,7 @@
     "node-fetch": "^2.6.0",
     "p-memoize": "^3.1.0",
     "p-queue": "^6.2.0",
-    "textlint-rule-helper": "2.2.4"
+    "textlint-rule-helper": "^2.2.4"
   },
   "devDependencies": {
     "@textlint/ast-node-types": "^12.6.1",

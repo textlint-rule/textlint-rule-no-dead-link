@@ -31,7 +31,7 @@ importers:
         specifier: ^6.2.0
         version: 6.6.2
       textlint-rule-helper:
-        specifier: 2.2.4
+        specifier: ^2.2.4
         version: 2.2.4
     devDependencies:
       '@textlint/ast-node-types':
