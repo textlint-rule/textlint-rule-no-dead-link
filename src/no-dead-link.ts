@@ -1,6 +1,6 @@
 import { RuleHelper } from "textlint-rule-helper";
 import fs from "fs/promises";
-import minimatch from "minimatch";
+import { minimatch } from "minimatch";
 import { isAbsolute } from "path";
 import { fileURLToPath } from "url";
 import pMemoize from "p-memoize";
@@ -419,14 +419,14 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
             });
         },
 
-        [Syntax.DocumentExit]() {
+        async [Syntax.DocumentExit]() {
             const queue = new PQueue({
                 concurrency: ruleOptions.concurrency,
                 intervalCap: ruleOptions.intervalCap,
                 interval: ruleOptions.interval
             });
             const linkTasks = URIs.map((item) => () => lint(item, ruleOptions.retry));
-            return queue.addAll(linkTasks);
+            await queue.addAll(linkTasks);
         }
     };
 };
