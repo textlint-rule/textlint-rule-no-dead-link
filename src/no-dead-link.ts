@@ -1,5 +1,4 @@
 import { RuleHelper } from "textlint-rule-helper";
-import fetch, { RequestInit } from "node-fetch";
 import URL from "url";
 import fs from "fs/promises";
 import minimatch from "minimatch";
@@ -109,10 +108,6 @@ const createFetchWithRuleDefaults = (ruleOptions: Options) => {
         const { host } = URL.parse(uri);
         return fetch(uri, {
             ...fetchOptions,
-            // Disable gzip compression in Node.js
-            // to avoid the zlib's "unexpected end of file" error
-            // https://github.com/request/request/issues/2045
-            compress: false,
             // Some website require UserAgent and Accept header
             // to avoid ECONNRESET error
             // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/111
@@ -168,11 +163,11 @@ const createCheckAliveURL = (ruleOptions: Options) => {
         maxRetryCount: number = 3,
         currentRetryCount: number = 0
     ): Promise<AliveFunctionReturn> {
-        const opts: RequestInit = {
+        const opts = {
             method,
             // Use `manual` redirect behaviour to get HTTP redirect status code
             // and see what kind of redirect is occurring
-            redirect: "manual"
+            redirect: "manual" as RequestRedirect
         };
         try {
             const res = await fetchWithDefaults(uri, opts);
