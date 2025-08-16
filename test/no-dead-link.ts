@@ -95,19 +95,19 @@ tester.run("no-dead-link", rule, {
         {
             inputPath: path.join(__dirname, "fixtures/a.md")
         },
-        // SKIP: External service tests (npmjs.com)
-        // {
-        //     text: "should success with GET method: [npm results for textlint](https://www.npmjs.com/search?q=textlint)",
-        //     options: {
-        //         preferGET: ["https://www.npmjs.com"]
-        //     }
-        // },
-        // {
-        //     text: "should success with GET method whether the option is specific URL: [npm results for textlint](https://www.npmjs.com/search?q=textlint)",
-        //     options: {
-        //         preferGET: ["https://www.npmjs.com/search?q=textlint-rule"]
-        //     }
-        // },
+        // Test preferGET option with local server
+        {
+            text: `should success with GET method: [preferGET endpoint](${TEST_SERVER_URL}/preferGET)`,
+            options: {
+                preferGET: [TEST_SERVER_URL]
+            }
+        },
+        {
+            text: `should success with GET method when the option is specific URL: [preferGET endpoint](${TEST_SERVER_URL}/preferGET)`,
+            options: {
+                preferGET: [`${TEST_SERVER_URL}/preferGET`]
+            }
+        },
         // Test that redirect is not reported when ignoreRedirects is true
         {
             text: `should not report redirect when ignoreRedirects is true: ${TEST_SERVER_URL}/301`,
