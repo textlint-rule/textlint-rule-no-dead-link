@@ -2,6 +2,7 @@ import { RuleHelper } from "textlint-rule-helper";
 import fs from "fs/promises";
 import minimatch from "minimatch";
 import { isAbsolute } from "path";
+import { fileURLToPath } from "url";
 import pMemoize from "p-memoize";
 import PQueue from "p-queue";
 import type { TextlintRuleReporter } from "@textlint/types";
@@ -254,12 +255,9 @@ const createCheckAliveURL = (ruleOptions: Options) => {
  */
 async function isAliveLocalFile(filePath: string): Promise<AliveFunctionReturn> {
     try {
-        // Convert file:// URL back to path if needed
-        let pathToCheck = filePath;
-        if (filePath.startsWith("file://")) {
-            const url = URL.parse(filePath);
-            pathToCheck = url ? url.pathname : filePath;
-        }
+        // Convert file:// URL to path if needed, otherwise use as-is
+        const pathToCheck = filePath.startsWith("file://") ? fileURLToPath(filePath) : filePath;
+
         await fs.access(pathToCheck.replace(/[?#].*?$/, ""));
         return {
             ok: true,
