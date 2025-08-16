@@ -91,6 +91,23 @@ export async function startTestServer(options: TestServerOptions = {}): Promise<
                 }, 10000); // 10 seconds delay
                 break;
 
+            case "/preferGET":
+                // Endpoint that only works with GET method
+                // Used to test preferGET option
+                if (req.method === "HEAD") {
+                    // HEAD request returns 405 Method Not Allowed
+                    res.writeHead(405, { "Content-Type": "text/plain" });
+                    res.end();
+                } else if (req.method === "GET") {
+                    // GET request returns 200 OK
+                    res.writeHead(200, { "Content-Type": "text/html" });
+                    res.end("<html><body>This endpoint requires GET method</body></html>");
+                } else {
+                    res.writeHead(405, { "Content-Type": "text/plain" });
+                    res.end("Method Not Allowed");
+                }
+                break;
+
             default:
                 // Default to 200 OK for any other path
                 res.writeHead(200, { "Content-Type": "text/plain" });
