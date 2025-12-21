@@ -66,7 +66,8 @@ The default options are:
       "retry": 3,
       "userAgent": "textlint-rule-no-dead-link/1.0",
       "maxRetryTime": 10,
-      "maxRetryAfterTime": 90
+      "maxRetryAfterTime": 90,
+      "linkMaxAge": 30000
     }
   }
 }
@@ -175,6 +176,12 @@ Some website like GitHub returns `Retry-After` header value with `429 too many r
 This `maxRetryAfterTime` option is for that `Retry-After`.
 
 Default: `10`
+
+### linkMaxAge
+
+The time (in milliseconds) that the cache for the result indicating whether a link is available.
+
+Default: `30000`
 
 ## CI Integration
 
