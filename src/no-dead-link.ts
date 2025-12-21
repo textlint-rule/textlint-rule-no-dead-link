@@ -183,9 +183,9 @@ const createCheckAliveURL = (ruleOptions: Options) => {
             const res = await fetchWithDefaults(uri, opts);
             // redirected
             if (isRedirect(res.status)) {
-                const redirectedUrl = res.headers.get("Location");
+                const location = res.headers.get("Location");
                 // Status code is 301 or 302, but Location header is not set
-                if (redirectedUrl === null) {
+                if (location === null) {
                     return {
                         ok: false,
                         redirected: true,
@@ -193,6 +193,19 @@ const createCheckAliveURL = (ruleOptions: Options) => {
                         message: `${res.status} ${res.statusText}`
                     };
                 }
+
+                const redirectedUrl = isRelative(location)
+                    ? URL.parse(location, URL.parse(uri)?.origin)?.href
+                    : location;
+                if (!redirectedUrl) {
+                    return {
+                        ok: false,
+                        redirected: true,
+                        redirectTo: null,
+                        message: `${res.status} ${res.statusText}`
+                    };
+                }
+
                 const finalRes = await fetchWithDefaults(redirectedUrl, { ...opts, redirect: "follow" });
                 const url = URL.parse(uri);
                 const hash = url?.hash || null;

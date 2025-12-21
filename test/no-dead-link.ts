@@ -121,6 +121,13 @@ tester.run("no-dead-link", rule, {
                 ignoreRedirects: true
             }
         },
+        // Test whether redirection to a relative path is possible
+        {
+            text: `should handle relative redirect: ${TEST_SERVER_URL}/301-relative`,
+            options: {
+                ignoreRedirects: true
+            }
+        },
         // Test User-Agent requirement
         {
             text: `should treat 200 OK when User-Agent is provided: ${TEST_SERVER_URL}/user-agent-required`,
