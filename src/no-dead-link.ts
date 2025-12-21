@@ -22,6 +22,7 @@ export type Options = {
     userAgent: string; // {String} a UserAgent,
     maxRetryTime: number; // (number) The max of waiting seconds for retry. It is related to `retry` option. It does affect to `Retry-After` header.
     maxRetryAfterTime: number; // (number) The max of waiting seconds for `Retry-After` header.
+    linkMaxAge: number; // (number) The max age in milliseconds for caching link check results.
 };
 const DEFAULT_OPTIONS: Options = {
     checkRelative: true, // {boolean} `false` disables the checks for relative URIs.
@@ -36,7 +37,8 @@ const DEFAULT_OPTIONS: Options = {
     intervalCap: 8, // The max number of runs in the given interval of time. [Experimental]
     userAgent: "textlint-rule-no-dead-link/1.0", // {String} a UserAgent,
     maxRetryTime: 10, // (number) The max of waiting seconds for retry. It is related to `retry` option. It does affect to `Retry-After` header.
-    maxRetryAfterTime: 10 // (number) The max of waiting seconds for `Retry-After` header.
+    maxRetryAfterTime: 10, // (number) The max of waiting seconds for `Retry-After` header.
+    linkMaxAge: 30 * 1000 // (number) The max age in milliseconds for caching link check results.
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
@@ -276,9 +278,8 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
     const helper = new RuleHelper(context);
     const ruleOptions = { ...DEFAULT_OPTIONS, ...options };
     const isAliveURI = createCheckAliveURL(ruleOptions);
-    // 30sec memorized
     const memorizedIsAliveURI = pMemoize(isAliveURI, {
-        maxAge: 30 * 1000
+        maxAge: ruleOptions.linkMaxAge
     });
     /**
      * Checks a given URI's availability and report if it is dead.
