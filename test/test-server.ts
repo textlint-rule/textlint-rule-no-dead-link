@@ -72,6 +72,15 @@ export async function startTestServer(options: TestServerOptions = {}): Promise<
                 res.end("Moved Permanently");
                 break;
 
+            case "/301-relative":
+                // Redirect to a relative URL
+                res.writeHead(301, {
+                    Location: `200`,
+                    "Content-Type": "text/plain"
+                });
+                res.end("Moved Permanently");
+                break;
+
             case "/user-agent-required":
                 // Requires specific User-Agent header
                 if (req.headers["user-agent"] && req.headers["user-agent"].includes("Mozilla")) {
