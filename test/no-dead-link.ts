@@ -135,6 +135,14 @@ tester.run("no-dead-link", rule, {
                 userAgent:
                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Safari/537.36"
             }
+        },
+        // Test whether an absolute path can be resolved for `httpOnly` option
+        {
+            text: "should be able to check absolute path when httpOnly is true: [example](/200)",
+            options: {
+                httpOnly: true,
+                baseURI: TEST_SERVER_URL
+            }
         }
         // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/125
         // SKIP: External service test (consul.io redirects too many times)
@@ -276,6 +284,21 @@ tester.run("no-dead-link", rule, {
                             column: 6 + TEST_SERVER_URL.length + 4
                         }
                     }
+                }
+            ]
+        },
+        // If not `httpOnly`, test whether the absolute path can be resolved
+        {
+            text: "should be able to check absolute path when httpOnly is false: [example](/200)",
+            options: {
+                httpOnly: false,
+                baseURI: TEST_SERVER_URL
+            },
+            errors: [
+                {
+                    message: `/200 is dead. (ENOENT: no such file or directory, access '${process.platform === "win32" ? "D:\\" : "/"}200')`,
+                    line: 1,
+                    column: 73
                 }
             ]
         }

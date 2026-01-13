@@ -23,6 +23,7 @@ export type Options = {
     maxRetryTime: number; // (number) The max of waiting seconds for retry. It is related to `retry` option. It does affect to `Retry-After` header.
     maxRetryAfterTime: number; // (number) The max of waiting seconds for `Retry-After` header.
     linkMaxAge: number; // (number) The max age in milliseconds for caching link check results.
+    httpOnly: boolean; // (boolean) `true` treats all links as http/https links
 };
 const DEFAULT_OPTIONS: Options = {
     checkRelative: true, // {boolean} `false` disables the checks for relative URIs.
@@ -38,7 +39,8 @@ const DEFAULT_OPTIONS: Options = {
     userAgent: "textlint-rule-no-dead-link/1.0", // {String} a UserAgent,
     maxRetryTime: 10, // (number) The max of waiting seconds for retry. It is related to `retry` option. It does affect to `Retry-After` header.
     maxRetryAfterTime: 10, // (number) The max of waiting seconds for `Retry-After` header.
-    linkMaxAge: 30 * 1000 // (number) The max age in milliseconds for caching link check results.
+    linkMaxAge: 30 * 1000, // (number) The max age in milliseconds for caching link check results.
+    httpOnly: false // (boolean) `true` treats all links as http/https links
 };
 
 // Adopted from http://stackoverflow.com/a/3809435/951517
@@ -149,9 +151,10 @@ type AliveFunctionReturn = {
 /**
  * Create isAliveURI function with ruleOptions
  * @param {object} ruleOptions
+ * @param {function} resolvePath
  * @returns {isAliveURI}
  */
-const createCheckAliveURL = (ruleOptions: Options) => {
+const createCheckAliveURL = (ruleOptions: Options, resolvePath: (path: string, base: string) => string | undefined) => {
     // Create fetch function for this rule
     const fetchWithDefaults = createFetchWithRuleDefaults(ruleOptions);
     /**
@@ -196,9 +199,10 @@ const createCheckAliveURL = (ruleOptions: Options) => {
                     };
                 }
 
-                const redirectedUrl = isRelative(location)
-                    ? URL.parse(location, URL.parse(uri)?.origin)?.href
-                    : location;
+                // Since fetch is successful, parsing always succeeds
+                const base = URL.parse(uri)!.origin;
+
+                const redirectedUrl = resolvePath(location, base);
                 if (!redirectedUrl) {
                     return {
                         ok: false,
@@ -290,7 +294,21 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
     const { Syntax, getSource, report, RuleError, fixer, getFilePath, locator } = context;
     const helper = new RuleHelper(context);
     const ruleOptions = { ...DEFAULT_OPTIONS, ...options };
-    const isAliveURI = createCheckAliveURL(ruleOptions);
+    const resolvePath = (path: string, base: string): string | undefined => {
+        if (ruleOptions.httpOnly) {
+            return URL.parse(path, base)?.href;
+        } else {
+            if (isRelative(path)) {
+                // eslint-disable-next-line no-param-reassign
+                // Convert file path to file:// URL if needed
+                const baseURL = base.startsWith("http") || base.startsWith("file://") ? base : `file://${base}`;
+                return URL.parse(path, baseURL)?.href;
+            } else {
+                return path;
+            }
+        }
+    };
+    const isAliveURI = createCheckAliveURL(ruleOptions, resolvePath);
     const memorizedIsAliveURI = pMemoize(isAliveURI, {
         maxAge: ruleOptions.linkMaxAge
     });
@@ -306,29 +324,17 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
             return;
         }
 
-        if (isRelative(uri)) {
-            if (!ruleOptions.checkRelative) {
-                return;
-            }
-
-            const filePath = getFilePath();
-            const base = ruleOptions.baseURI || filePath;
-            if (!base) {
-                const message =
-                    "Unable to resolve the relative URI. Please check if the base URI is correctly specified.";
-
-                report(node, new RuleError(message, { padding: locator.range([index, index + uri.length]) }));
-                return;
-            }
-
-            // eslint-disable-next-line no-param-reassign
-            // Convert file path to file:// URL if needed
-            const baseURL = base.startsWith("http") || base.startsWith("file://") ? base : `file://${base}`;
-            const resolved = URL.parse(uri, baseURL);
-            if (resolved) {
-                uri = resolved.href;
-            }
+        if (isRelative(uri) && !ruleOptions.checkRelative) {
+            return;
         }
+        const base = ruleOptions.baseURI || getFilePath();
+        if (isRelative(uri) && !base) {
+            const message = "Unable to resolve the relative URI. Please check if the base URI is correctly specified.";
+
+            report(node, new RuleError(message, { padding: locator.range([index, index + uri.length]) }));
+            return;
+        }
+        uri = resolvePath(uri, base || "") || uri;
 
         // Ignore non http external link
         // https://github.com/textlint-rule/textlint-rule-no-dead-link/issues/112
