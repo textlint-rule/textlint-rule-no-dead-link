@@ -67,7 +67,8 @@ The default options are:
       "userAgent": "textlint-rule-no-dead-link/1.0",
       "maxRetryTime": 10,
       "maxRetryAfterTime": 90,
-      "linkMaxAge": 30000
+      "linkMaxAge": 30000,
+      "httpOnly": false
     }
   }
 }
@@ -182,6 +183,12 @@ Default: `10`
 The time (in milliseconds) that the cache for the result indicating whether a link is available.
 
 Default: `30000`
+
+### httpOnly
+
+Controls whether all links are treated as HTTP/HTTPS links. If `true`, links like `/path/to` are checked for existence via HTTP/HTTPS communication rather than the filesystem. The Base URI is the base of the redirect source URL for redirects, and `baseURI` otherwise.
+
+Default: `false`
 
 ## CI Integration
 
