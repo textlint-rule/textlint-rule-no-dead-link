@@ -186,30 +186,29 @@ const createCheckAliveURL = (ruleOptions: Options, resolvePath: (path: string, b
         };
         try {
             const res = await fetchWithDefaults(uri, opts);
+            const errorResult = {
+                ok: false,
+                redirected: true,
+                redirectTo: null,
+                message: `${res.status} ${res.statusText}`
+            };
+
             // redirected
             if (isRedirect(res.status)) {
                 const location = res.headers.get("Location");
                 // Status code is 301 or 302, but Location header is not set
                 if (location === null) {
-                    return {
-                        ok: false,
-                        redirected: true,
-                        redirectTo: null,
-                        message: `${res.status} ${res.statusText}`
-                    };
+                    return errorResult;
                 }
 
-                // Since fetch is successful, parsing always succeeds
-                const base = URL.parse(uri)!.origin;
+                const base = URL.parse(uri)?.origin;
+                if (!base) {
+                    return errorResult;
+                }
 
                 const redirectedUrl = resolvePath(location, base);
                 if (!redirectedUrl) {
-                    return {
-                        ok: false,
-                        redirected: true,
-                        redirectTo: null,
-                        message: `${res.status} ${res.statusText}`
-                    };
+                    return errorResult;
                 }
 
                 const finalRes = await fetchWithDefaults(redirectedUrl, { ...opts, redirect: "follow" });
