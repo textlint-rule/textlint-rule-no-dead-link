@@ -296,7 +296,7 @@ tester.run("no-dead-link", rule, {
             },
             errors: [
                 {
-                    message: `/200 is dead. (ENOENT: no such file or directory, access '${process.platform === "win32" ? "D:\\" : "/"}200')`,
+                    message: `/200 is dead. (ENOENT: no such file or directory, access '${path.resolve("/200")}')`,
                     line: 1,
                     column: 73
                 }
