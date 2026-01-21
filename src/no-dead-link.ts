@@ -184,8 +184,12 @@ const createCheckAliveURL = (ruleOptions: Options, resolvePath: (path: string, b
             // and see what kind of redirect is occurring
             redirect: "manual" as RequestRedirect
         };
+
+        // Declare the variable outside the try-catch block to ensure the body is always consumed in `finally`.
+        let res: Response | null = null;
+
         try {
-            const res = await fetchWithDefaults(uri, opts);
+            res = await fetchWithDefaults(uri, opts);
             const errorResult = {
                 ok: false,
                 redirected: true,
@@ -214,6 +218,7 @@ const createCheckAliveURL = (ruleOptions: Options, resolvePath: (path: string, b
                 const finalRes = await fetchWithDefaults(redirectedUrl, { ...opts, redirect: "follow" });
                 const url = URL.parse(uri);
                 const hash = url?.hash || null;
+                await finalRes.body?.cancel();
                 return {
                     ok: finalRes.ok,
                     redirected: true,
@@ -264,6 +269,10 @@ const createCheckAliveURL = (ruleOptions: Options, resolvePath: (path: string, b
                 ok: false,
                 message: ex.message
             };
+        } finally {
+            if (res && !res.body?.locked) {
+                await res.body?.cancel();
+            }
         }
     };
 };
