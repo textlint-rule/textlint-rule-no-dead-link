@@ -184,8 +184,12 @@ const createCheckAliveURL = (ruleOptions: Options, resolvePath: (path: string, b
             // and see what kind of redirect is occurring
             redirect: "manual" as RequestRedirect
         };
+
+        // Declare the variable outside the try-catch block to ensure the body is always consumed in `finally`.
+        let res: Response | null = null;
+
         try {
-            const res = await fetchWithDefaults(uri, opts);
+            res = await fetchWithDefaults(uri, opts);
             const errorResult = {
                 ok: false,
                 redirected: true,
@@ -214,6 +218,7 @@ const createCheckAliveURL = (ruleOptions: Options, resolvePath: (path: string, b
                 const finalRes = await fetchWithDefaults(redirectedUrl, { ...opts, redirect: "follow" });
                 const url = URL.parse(uri);
                 const hash = url?.hash || null;
+                await finalRes.body?.cancel();
                 return {
                     ok: finalRes.ok,
                     redirected: true,
@@ -264,6 +269,10 @@ const createCheckAliveURL = (ruleOptions: Options, resolvePath: (path: string, b
                 ok: false,
                 message: ex.message
             };
+        } finally {
+            if (res && !res.body?.locked) {
+                await res.body?.cancel();
+            }
         }
     };
 };
@@ -289,6 +298,11 @@ async function isAliveLocalFile(filePath: string): Promise<AliveFunctionReturn> 
     }
 }
 
+const memorizedIsAliveURIByOptions = new Map<
+    string,
+    ReturnType<typeof pMemoize<ReturnType<typeof createCheckAliveURL>>>
+>();
+
 const reporter: TextlintRuleReporter<Options> = (context, options) => {
     const { Syntax, getSource, report, RuleError, fixer, getFilePath, locator } = context;
     const helper = new RuleHelper(context);
@@ -307,10 +321,21 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
             }
         }
     };
-    const isAliveURI = createCheckAliveURL(ruleOptions, resolvePath);
-    const memorizedIsAliveURI = pMemoize(isAliveURI, {
-        maxAge: ruleOptions.linkMaxAge
-    });
+    const memorizedIsAliveURI = (() => {
+        const memoOptionsKey = JSON.stringify(ruleOptions);
+        const func = memorizedIsAliveURIByOptions.get(memoOptionsKey);
+        if (!func) {
+            const isAliveURI = createCheckAliveURL(ruleOptions, resolvePath);
+            const func = pMemoize(isAliveURI, {
+                maxAge: ruleOptions.linkMaxAge
+            });
+            memorizedIsAliveURIByOptions.set(memoOptionsKey, func);
+            return func;
+        }
+
+        return func;
+    })();
+
     /**
      * Checks a given URI's availability and report if it is dead.
      * @param {TextLintNode} node TextLintNode the URI belongs to.
