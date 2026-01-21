@@ -289,6 +289,11 @@ async function isAliveLocalFile(filePath: string): Promise<AliveFunctionReturn> 
     }
 }
 
+const memorizedIsAliveURIByOptions = new Map<
+    string,
+    ReturnType<typeof pMemoize<ReturnType<typeof createCheckAliveURL>>>
+>();
+
 const reporter: TextlintRuleReporter<Options> = (context, options) => {
     const { Syntax, getSource, report, RuleError, fixer, getFilePath, locator } = context;
     const helper = new RuleHelper(context);
@@ -307,10 +312,21 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
             }
         }
     };
-    const isAliveURI = createCheckAliveURL(ruleOptions, resolvePath);
-    const memorizedIsAliveURI = pMemoize(isAliveURI, {
-        maxAge: ruleOptions.linkMaxAge
-    });
+    const memorizedIsAliveURI = (() => {
+        const memoOptionsKey = JSON.stringify(ruleOptions);
+        const func = memorizedIsAliveURIByOptions.get(memoOptionsKey);
+        if (!func) {
+            const isAliveURI = createCheckAliveURL(ruleOptions, resolvePath);
+            const func = pMemoize(isAliveURI, {
+                maxAge: ruleOptions.linkMaxAge
+            });
+            memorizedIsAliveURIByOptions.set(memoOptionsKey, func);
+            return func;
+        }
+
+        return func;
+    })();
+
     /**
      * Checks a given URI's availability and report if it is dead.
      * @param {TextLintNode} node TextLintNode the URI belongs to.
