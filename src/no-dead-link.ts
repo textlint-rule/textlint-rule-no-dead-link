@@ -265,6 +265,11 @@ const createCheckAliveURL = (ruleOptions: Options, resolvePath: (path: string, b
                 return isAliveURI(uri, "GET", maxRetryCount, currentRetryCount + 1);
             }
 
+            // Retry on network errors (e.g. ECONNRESET, timeout) for GET requests as well
+            if (method === "GET" && currentRetryCount < maxRetryCount) {
+                return isAliveURI(uri, "GET", maxRetryCount, currentRetryCount + 1);
+            }
+
             return {
                 ok: false,
                 message: ex.message
