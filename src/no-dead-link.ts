@@ -232,7 +232,7 @@ const createCheckAliveURL = (ruleOptions: Options, resolvePath: (path: string, b
             }
 
             // try to fetch again if not reach max retry count
-            if (currentRetryCount < maxRetryCount) {
+            if (!res.ok && currentRetryCount < maxRetryCount) {
                 const retryAfter = res.headers.get("Retry-After");
                 // If the response has `Retry-After` header, prefer it
                 // e.g. `Retry-After: 60` and `maxRetryAfterTime: 90`, wait 60 seconds
