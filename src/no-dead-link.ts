@@ -151,10 +151,9 @@ type AliveFunctionReturn = {
 /**
  * Create isAliveURI function with ruleOptions
  * @param {object} ruleOptions
- * @param {function} resolvePath
  * @returns {isAliveURI}
  */
-const createCheckAliveURL = (ruleOptions: Options, resolvePath: (path: string, base: string) => string | undefined) => {
+const createCheckAliveURL = (ruleOptions: Options) => {
     // Create fetch function for this rule
     const fetchWithDefaults = createFetchWithRuleDefaults(ruleOptions);
     /**
@@ -205,12 +204,7 @@ const createCheckAliveURL = (ruleOptions: Options, resolvePath: (path: string, b
                     return errorResult;
                 }
 
-                const base = URL.parse(uri)?.origin;
-                if (!base) {
-                    return errorResult;
-                }
-
-                const redirectedUrl = resolvePath(location, base);
+                const redirectedUrl = URL.parse(location, uri)?.href;
                 if (!redirectedUrl) {
                     return errorResult;
                 }
@@ -325,7 +319,7 @@ const reporter: TextlintRuleReporter<Options> = (context, options) => {
         const memoOptionsKey = JSON.stringify(ruleOptions);
         const func = memorizedIsAliveURIByOptions.get(memoOptionsKey);
         if (!func) {
-            const isAliveURI = createCheckAliveURL(ruleOptions, resolvePath);
+            const isAliveURI = createCheckAliveURL(ruleOptions);
             const func = pMemoize(isAliveURI, {
                 maxAge: ruleOptions.linkMaxAge
             });
