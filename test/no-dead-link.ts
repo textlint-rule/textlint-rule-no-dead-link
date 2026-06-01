@@ -185,6 +185,16 @@ tester.run("no-dead-link", rule, {
             ]
         },
         {
+            text: `should treat 301 [link](${TEST_SERVER_URL}/301-root-relative)`,
+            output: `should treat 301 [link](${TEST_SERVER_URL}/200)`,
+            errors: [
+                {
+                    message: `${TEST_SERVER_URL}/301-root-relative is redirected to ${TEST_SERVER_URL}/200. (301 Moved Permanently)`,
+                    range: [24, 24 + TEST_SERVER_URL.length + 18] // /301-root-relative = 18 chars
+                }
+            ]
+        },
+        {
             text: `should treat 302 [link](${TEST_SERVER_URL}/302)`,
             output: `should treat 302 [link](${TEST_SERVER_URL}/200)`,
             errors: [
